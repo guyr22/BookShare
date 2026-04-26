@@ -32,15 +32,6 @@ BookShare is a social community Android application for book lovers to share, ex
 - **View Binding:** Prefer ViewBinding over `findViewById`.
 - **Navigation:** Use the Navigation component's generated `Directions` classes for navigating between fragments.
 
-## 🔀 Git Workflow
-For every task or feature:
-1. Create a new branch from `main` named `feat/{name-of-the-feature}` (e.g., `feat/book-listing-screen`).
-2. Do all work on that branch.
-3. When the task is complete, push the branch with a detailed commit message that describes:
-   - **What** was added/changed.
-   - **Why** the change was made.
-   - **How** it fits into the architecture (e.g., which layer was touched: UI, ViewModel, Repository, Room, Network).
-
 ## 💻 Helpful Gradle Commands
 - Build Debug APK: `./gradlew assembleDebug`
 - Run Unit Tests: `./gradlew test`
