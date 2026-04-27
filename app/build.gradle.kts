@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.navigation.safeargs)
 }
 
 android {
@@ -34,6 +36,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
@@ -49,6 +57,9 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
