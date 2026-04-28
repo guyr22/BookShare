@@ -29,7 +29,7 @@ class RegisterFragment : Fragment() {
         }
 
         binding?.goToLoginTextView?.setOnClickListener {
-            view?.findNavController()?.popBackStack()
+            findNavController().popBackStack()
         }
     }
 
