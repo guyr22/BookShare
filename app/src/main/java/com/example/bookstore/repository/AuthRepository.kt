@@ -15,10 +15,10 @@ class AuthRepository(
 
     fun isLoggedIn(): Boolean = auth.currentUser != null
 
-    suspend fun signInWithEmail(email: String, password: String): AuthResult<User> {
+    suspend fun signInWithEmail(email: String, password: String): AppResult<User> {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
-            val firebaseUser = result.user ?: return AuthResult.Error("Sign-in succeeded but no user was returned.")
+            val firebaseUser = result.user ?: return AppResult.Error("Sign-in succeeded but no user was returned.")
 
             val user = User(
                 id = firebaseUser.uid,
@@ -27,9 +27,9 @@ class AuthRepository(
             )
             userDao.insert(user)
 
-            AuthResult.Success(user)
+            AppResult.Success(user)
         } catch (e: Exception) {
-            AuthResult.Error(e.message ?: "Sign-in failed.", e)
+            AppResult.Error(e.message ?: "Sign-in failed.", e)
         }
     }
 
@@ -37,10 +37,10 @@ class AuthRepository(
         email: String,
         password: String,
         name: String
-    ): AuthResult<User> {
+    ): AppResult<User> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
-            val firebaseUser = result.user ?: return AuthResult.Error("Registration succeeded but no user was returned.")
+            val firebaseUser = result.user ?: return AppResult.Error("Registration succeeded but no user was returned.")
 
             val user = User(
                 id = firebaseUser.uid,
@@ -49,9 +49,9 @@ class AuthRepository(
             )
             userDao.insert(user)
 
-            AuthResult.Success(user)
+            AppResult.Success(user)
         } catch (e: Exception) {
-            AuthResult.Error(e.message ?: "Registration failed.", e)
+            AppResult.Error(e.message ?: "Registration failed.", e)
         }
     }
 
