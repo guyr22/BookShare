@@ -1,5 +1,6 @@
 package com.example.bookstore.repository
 
+import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import com.example.bookstore.local.Book
 import com.example.bookstore.local.BookDao
@@ -10,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 
 class BookRepository(
     private val bookDao: BookDao,
+    private val storageRepository: StorageRepository = StorageRepository(),
     private val db: FirebaseDatabase = FirebaseDatabase.getInstance()
 ) {
 
@@ -55,6 +57,58 @@ class BookRepository(
             AppResult.Success(Unit)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Failed to delete book.", e)
+        }
+    }
+
+    // ── Save flow (new + edit with optional image upload) ────────────────────
+
+    /**
+     * Full save pipeline:
+     *   1. If [coverBitmap] is provided, upload it to Firebase Storage and use
+     *      the returned URL as the book's coverUrl.
+     *   2. Generate a Firebase key locally (no network call required).
+     *   3. Write the finished book to Room immediately so the UI updates at once.
+     *   4. Push the same record to Firebase Realtime Database.
+     *
+     * For edits, pass the existing book with a non-null [coverBitmap] only when
+     * the user has selected a new image; otherwise the existing coverUrl is kept.
+     */
+    suspend fun saveBook(book: Book, coverBitmap: Bitmap? = null): AppResult<Book> {
+        return try {
+            // Step 1 – optional image upload
+            val coverUrl = if (coverBitmap != null) {
+                val path = "book_covers/${book.ownerId}/${System.currentTimeMillis()}.jpg"
+                when (val result = storageRepository.uploadBitmap(coverBitmap, path)) {
+                    is AppResult.Success -> result.data
+                    is AppResult.Error -> return result
+                }
+            } else {
+                book.coverUrl
+            }
+
+            // Step 2 – resolve the Firebase key (new book gets push key; edit keeps its id)
+            val key = if (book.id.isBlank()) {
+                booksRef.push().key ?: return AppResult.Error("Firebase failed to generate a key.")
+            } else {
+                book.id
+            }
+
+            // Step 3 – build the final record with resolved id, coverUrl, and timestamp
+            val finalBook = book.copy(
+                id = key,
+                coverUrl = coverUrl,
+                lastUpdated = System.currentTimeMillis()
+            )
+
+            // Step 4 – persist to Room first so the UI reacts immediately
+            bookDao.insert(finalBook)
+
+            // Step 5 – push to Firebase Realtime Database
+            booksRef.child(key).setValue(finalBook.toFirebaseMap()).await()
+
+            AppResult.Success(finalBook)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Failed to save book.", e)
         }
     }
 
