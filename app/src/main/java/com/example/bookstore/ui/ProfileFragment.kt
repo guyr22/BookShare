@@ -15,7 +15,6 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.ui.profile.Review
 import com.example.bookstore.ui.profile.ReviewsAdapter
@@ -88,25 +87,10 @@ class ProfileFragment : Fragment() {
 
     private fun setupReviewsList() {
         binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(context)
-        // Mock data so the screen matches the Figma until Task 5A wires BookAdapter
-        // + Sprint 3 hooks the LiveData feed.
-        val mockReviews = mutableListOf(
-            Review(
-                authorName = "Alex Reader",
-                bookTitle = "Project Hail Mary",
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
-                coverBackgroundRes = R.drawable.bg_book_cover_dark
-            ),
-            Review(
-                authorName = "Alex Reader",
-                bookTitle = "Klara and the Sun",
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
-                coverBackgroundRes = R.drawable.bg_book_cover_red
-            )
-        )
-        adapter = ReviewsAdapter(mockReviews)
+        val reviews = mutableListOf<Review>()
+        adapter = ReviewsAdapter(reviews)
         binding?.reviewsRecyclerView?.adapter = adapter
-        binding?.emptyStateTextView?.visibility = if (mockReviews.isEmpty()) View.VISIBLE else View.GONE
+        binding?.emptyStateTextView?.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun showImageSourceChooser() {
