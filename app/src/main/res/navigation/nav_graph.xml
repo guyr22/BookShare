@@ -59,6 +59,11 @@
         android:id="@+id/addEditBookFragment"
         android:name="com.example.bookstore.ui.AddEditBookFragment"
         android:label="Add / Edit Book"
-        tools:layout="@layout/fragment_add_edit_book" />
+        tools:layout="@layout/fragment_add_edit_book">
+        <argument
+            android:name="bookId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
 </navigation>
