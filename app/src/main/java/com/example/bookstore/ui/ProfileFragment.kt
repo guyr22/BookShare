@@ -9,15 +9,23 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentProfileBinding
+import com.example.bookstore.ui.profile.Review
+import com.example.bookstore.ui.profile.ReviewsAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.squareup.picasso.Picasso
 
 class ProfileFragment : Fragment() {
 
     private var binding: FragmentProfileBinding? = null
+    private var adapter: ReviewsAdapter? = null
 
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
@@ -47,21 +55,58 @@ class ProfileFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentProfileBinding.inflate(layoutInflater, container, false)
+        applyTopInset()
         setupView()
+        setupReviewsList()
         return binding?.root
     }
 
+    private fun applyTopInset() {
+        val toolbar = binding?.profileToolbar ?: return
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+            val top = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            view.updatePadding(top = top + dp(14))
+            insets
+        }
+    }
+
     private fun setupView() {
-        binding?.postsRecyclerView?.layoutManager = LinearLayoutManager(context)
-        binding?.postsRecyclerView?.setHasFixedSize(true)
-
-        binding?.avatarEditButton?.setOnClickListener { showImageSourceChooser() }
+        binding?.backButton?.setOnClickListener {
+            it.findNavController().popBackStack()
+        }
+        binding?.moreButton?.setOnClickListener {
+            Toast.makeText(context, "More options coming soon", Toast.LENGTH_SHORT).show()
+        }
         binding?.avatarImageView?.setOnClickListener { showImageSourceChooser() }
-
         binding?.editProfileButton?.setOnClickListener {
-            // TODO: wire to AccountViewModel in Sprint 3 — open inline edit form
+            // TODO: open edit-profile form when AccountViewModel ships in Sprint 3
             Toast.makeText(context, "Edit Profile coming soon", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setupReviewsList() {
+        binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(context)
+        // Mock data so the screen matches the Figma until Task 5A wires BookAdapter
+        // + Sprint 3 hooks the LiveData feed.
+        val mockReviews = mutableListOf(
+            Review(
+                authorName = "Alex Reader",
+                bookTitle = "Project Hail Mary",
+                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+                coverBackgroundRes = R.drawable.bg_book_cover_dark
+            ),
+            Review(
+                authorName = "Alex Reader",
+                bookTitle = "Klara and the Sun",
+                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+                coverBackgroundRes = R.drawable.bg_book_cover_red
+            )
+        )
+        adapter = ReviewsAdapter(mockReviews)
+        binding?.reviewsRecyclerView?.adapter = adapter
+        binding?.emptyStateTextView?.visibility = if (mockReviews.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun showImageSourceChooser() {
@@ -78,4 +123,6 @@ class ProfileFragment : Fragment() {
             }
             .show()
     }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }
