@@ -9,9 +9,10 @@
     <LinearLayout
         android:id="@+id/feedToolbar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:background="@color/bookshare_blue"
         android:gravity="center_vertical"
+        android:minHeight="56dp"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
         app:layout_constraintEnd_toEndOf="parent"
