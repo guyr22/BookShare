@@ -9,4 +9,12 @@
     <color name="bookshare_text_secondary">#8C949E</color>
     <color name="bookshare_field_stroke">#D4D9E0</color>
     <color name="bookshare_background">#FFFFFFFF</color>
+
+    <!-- Feed card palette (matches Figma Feed Screen 29:2) -->
+    <color name="bookshare_text_strong">#21262E</color>
+    <color name="bookshare_text_body">#4D5761</color>
+    <color name="bookshare_text_muted">#737D8A</color>
+    <color name="bookshare_card_border">#EBEDF0</color>
+    <color name="bookshare_avatar_placeholder">#D4D9E0</color>
+    <color name="bookshare_book_cover_placeholder">#F2C733</color>
 </resources>
