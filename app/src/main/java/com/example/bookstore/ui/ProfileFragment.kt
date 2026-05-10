@@ -14,14 +14,19 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.bookstore.R
+import androidx.recyclerview.widget.RecyclerView
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.local.AppDatabase
+import com.example.bookstore.local.Book
 import com.example.bookstore.repository.AuthRepository
-import com.example.bookstore.ui.profile.Review
+import com.example.bookstore.repository.BookRepository
+import com.example.bookstore.ui.profile.OnReviewClickListener
 import com.example.bookstore.ui.profile.ReviewsAdapter
+import com.example.bookstore.viewmodel.MainViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -30,6 +35,7 @@ class ProfileFragment : Fragment() {
 
     private var binding: FragmentProfileBinding? = null
     private var adapter: ReviewsAdapter? = null
+    private var viewModel: MainViewModel? = null
 
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
@@ -60,6 +66,7 @@ class ProfileFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentProfileBinding.inflate(layoutInflater, container, false)
         applyTopInset()
+        setupViewModel()
         setupView()
         setupReviewsList()
         return binding?.root
@@ -75,6 +82,12 @@ class ProfileFragment : Fragment() {
         (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
+    private fun setupViewModel() {
+        val ctx = requireContext().applicationContext
+        val bookRepository = BookRepository(AppDatabase.getInstance(ctx).bookDao())
+        viewModel = ViewModelProvider(this, MainViewModel.Factory(bookRepository))[MainViewModel::class.java]
+    }
+
     private fun applyTopInset() {
         val toolbar = binding?.profileToolbar ?: return
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
@@ -87,6 +100,11 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupView() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        binding?.nameTextView?.text = currentUser?.displayName
+            ?: currentUser?.email?.substringBefore("@")
+                    ?: "Your Name"
+
         binding?.backButton?.setOnClickListener {
             it.findNavController().popBackStack()
         }
@@ -109,27 +127,53 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupReviewsList() {
-        binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(context)
-        val reviews = mockReviews().toMutableList()
-        adapter = ReviewsAdapter(reviews)
+        val ctx = requireContext()
+        val displayName = binding?.nameTextView?.text?.toString()
+
+        adapter = ReviewsAdapter(mutableListOf()).apply {
+            this.displayName = displayName
+            listener = object : OnReviewClickListener {
+                override fun onReviewClick(book: Book) {
+                    val action = ProfileFragmentDirections.actionProfileToAddEditBook(book.id)
+                    view?.findNavController()?.navigate(action)
+                }
+            }
+        }
+        binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(ctx)
         binding?.reviewsRecyclerView?.adapter = adapter
-        binding?.emptyStateTextView?.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
+
+        attachSwipeToDelete()
+
+        val ownerId = FirebaseAuth.getInstance().currentUser?.uid
+        if (ownerId == null) {
+            binding?.emptyStateTextView?.visibility = View.VISIBLE
+            return
+        }
+        viewModel?.getBooksByOwner(ownerId)?.observe(viewLifecycleOwner) { books ->
+            adapter?.submit(books)
+            binding?.emptyStateTextView?.visibility =
+                if (books.isEmpty()) View.VISIBLE else View.GONE
+        }
     }
 
-    private fun mockReviews(): List<Review> = listOf(
-        Review(
-            authorName = "Alex Reader",
-            bookTitle = "Project Hail Mary",
-            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
-            coverBackgroundRes = R.drawable.bg_book_cover_dark
-        ),
-        Review(
-            authorName = "Alex Reader",
-            bookTitle = "Klara and the Sun",
-            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
-            coverBackgroundRes = R.drawable.bg_book_cover_red
-        )
-    )
+    private fun attachSwipeToDelete() {
+        val recyclerView = binding?.reviewsRecyclerView ?: return
+        val callback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                val book = adapter?.items?.getOrNull(position) ?: return
+                viewModel?.deleteBook(book)
+                // The LiveData observer refreshes the list once Room confirms the delete.
+            }
+        }
+        ItemTouchHelper(callback).attachToRecyclerView(recyclerView)
+    }
 
     private fun showImageSourceChooser() {
         val options = arrayOf("Take a photo", "Choose from gallery")
