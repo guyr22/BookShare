@@ -43,6 +43,11 @@
         <action
             android:id="@+id/action_feed_to_addEditBook"
             app:destination="@id/addEditBookFragment" />
+        <action
+            android:id="@+id/action_feed_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
