@@ -9,12 +9,14 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.repository.AuthRepository
@@ -63,6 +65,16 @@ class ProfileFragment : Fragment() {
         return binding?.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
+    }
+
     private fun applyTopInset() {
         val toolbar = binding?.profileToolbar ?: return
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
@@ -98,11 +110,26 @@ class ProfileFragment : Fragment() {
 
     private fun setupReviewsList() {
         binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(context)
-        val reviews = mutableListOf<Review>()
+        val reviews = mockReviews().toMutableList()
         adapter = ReviewsAdapter(reviews)
         binding?.reviewsRecyclerView?.adapter = adapter
         binding?.emptyStateTextView?.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
     }
+
+    private fun mockReviews(): List<Review> = listOf(
+        Review(
+            authorName = "Alex Reader",
+            bookTitle = "Project Hail Mary",
+            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+            coverBackgroundRes = R.drawable.bg_book_cover_dark
+        ),
+        Review(
+            authorName = "Alex Reader",
+            bookTitle = "Klara and the Sun",
+            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+            coverBackgroundRes = R.drawable.bg_book_cover_red
+        )
+    )
 
     private fun showImageSourceChooser() {
         val options = arrayOf("Take a photo", "Choose from gallery")

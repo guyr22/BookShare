@@ -19,9 +19,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <Space
+        <ImageView
+            android:id="@+id/feedProfileButton"
             android:layout_width="24dp"
-            android:layout_height="24dp" />
+            android:layout_height="24dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/feed_profile_description"
+            android:focusable="true"
+            android:src="@drawable/ic_account"
+            app:tint="@color/white" />
 
         <TextView
             android:id="@+id/feedTitleTextView"
@@ -35,14 +42,14 @@
             android:textSize="18sp" />
 
         <ImageView
-            android:id="@+id/feedOverflowButton"
+            android:id="@+id/feedLogoutButton"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:contentDescription="@string/feed_overflow_description"
+            android:contentDescription="@string/feed_logout_description"
             android:focusable="true"
-            android:src="@drawable/ic_more_vert" />
+            android:src="@drawable/ic_logout" />
 
     </LinearLayout>
 
