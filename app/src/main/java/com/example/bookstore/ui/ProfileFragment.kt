@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -62,6 +63,16 @@ class ProfileFragment : Fragment() {
         setupView()
         setupReviewsList()
         return binding?.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
     private fun applyTopInset() {
