@@ -5,4 +5,23 @@
     <string name="feed_profile_description">Open profile</string>
     <string name="feed_logout_description">Log out</string>
     <string name="feed_create_book_description">Add a new book</string>
+
+    <string name="addedit_add_title">Add Book</string>
+    <string name="addedit_edit_title">Edit Book</string>
+    <string name="addedit_back_description">Back</string>
+    <string name="addedit_search_hint">Search Google Books</string>
+    <string name="addedit_search_subhint">Press enter to auto-fill</string>
+    <string name="addedit_search_icon_description">Search</string>
+    <string name="addedit_cover_description">Book cover</string>
+    <string name="addedit_title_hint">Title</string>
+    <string name="addedit_author_hint">Author</string>
+    <string name="addedit_description_hint">Description</string>
+    <string name="addedit_save">Save</string>
+    <string name="addedit_delete">Delete</string>
+    <string name="addedit_save_progress_description">Saving…</string>
+    <string name="addedit_required_field">Title and author are required.</string>
+    <string name="addedit_save_failed">Couldn\'t save: %s</string>
+    <string name="addedit_delete_failed">Couldn\'t delete: %s</string>
+    <string name="addedit_search_no_results">No books found for that query.</string>
+    <string name="addedit_search_failed">Search failed: %s</string>
 </resources>
