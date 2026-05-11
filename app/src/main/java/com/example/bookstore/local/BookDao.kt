@@ -32,6 +32,9 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE ownerId = :ownerId ORDER BY lastUpdated DESC")
     fun getBooksByOwner(ownerId: String): LiveData<List<Book>>
 
+    @Query("SELECT * FROM books WHERE id = :bookId LIMIT 1")
+    fun getBookById(bookId: String): LiveData<Book?>
+
     @Query("SELECT MAX(lastUpdated) FROM books")
     suspend fun getMaxLastUpdated(): Long?
 }
