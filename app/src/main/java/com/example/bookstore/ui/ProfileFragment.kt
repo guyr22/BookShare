@@ -22,10 +22,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.local.Book
+import com.example.bookstore.local.User
 import com.example.bookstore.repository.AuthRepository
 import com.example.bookstore.repository.BookRepository
 import com.example.bookstore.ui.profile.OnReviewClickListener
 import com.example.bookstore.ui.profile.ReviewsAdapter
+import com.example.bookstore.viewmodel.AuthViewModel
 import com.example.bookstore.viewmodel.MainViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -36,6 +38,7 @@ class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
     private var adapter: ReviewsAdapter? = null
     private var viewModel: MainViewModel? = null
+    private var authViewModel: AuthViewModel? = null
 
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
@@ -66,15 +69,17 @@ class ProfileFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentProfileBinding.inflate(layoutInflater, container, false)
         applyTopInset()
-        setupViewModel()
+        setupViewModels()
         setupView()
         setupReviewsList()
+        observeCurrentUser()
         return binding?.root
     }
 
     override fun onResume() {
         super.onResume()
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        viewModel?.syncBooks()
     }
 
     override fun onPause() {
@@ -82,10 +87,13 @@ class ProfileFragment : Fragment() {
         (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
-    private fun setupViewModel() {
+    private fun setupViewModels() {
         val ctx = requireContext().applicationContext
-        val bookRepository = BookRepository(AppDatabase.getInstance(ctx).bookDao())
+        val database = AppDatabase.getInstance(ctx)
+        val bookRepository = BookRepository(database.bookDao())
+        val authRepository = AuthRepository(FirebaseAuth.getInstance(), database.userDao())
         viewModel = ViewModelProvider(this, MainViewModel.Factory(bookRepository))[MainViewModel::class.java]
+        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository))[AuthViewModel::class.java]
     }
 
     private fun applyTopInset() {
@@ -100,21 +108,18 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupView() {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        binding?.nameTextView?.text = currentUser?.displayName
-            ?: currentUser?.email?.substringBefore("@")
+        // Initial fallback name from FirebaseAuth — replaced as soon as the Room
+        // currentUser observer fires with the canonical record.
+        val firebaseUser = authViewModel?.firebaseUser
+        binding?.nameTextView?.text = firebaseUser?.displayName
+            ?: firebaseUser?.email?.substringBefore("@")
                     ?: "Your Name"
 
         binding?.backButton?.setOnClickListener {
             it.findNavController().popBackStack()
         }
         binding?.logoutButton?.setOnClickListener { view ->
-            val ctx = requireContext().applicationContext
-            val authRepository = AuthRepository(
-                FirebaseAuth.getInstance(),
-                AppDatabase.getInstance(ctx).userDao()
-            )
-            authRepository.signOut()
+            authViewModel?.signOut()
             view.findNavController().navigate(
                 ProfileFragmentDirections.actionProfileToLogin()
             )
@@ -123,6 +128,31 @@ class ProfileFragment : Fragment() {
         binding?.editProfileButton?.setOnClickListener {
             // TODO: open edit-profile form when AccountViewModel ships in Sprint 3
             Toast.makeText(context, "Edit Profile coming soon", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun observeCurrentUser() {
+        authViewModel?.currentUser?.observe(viewLifecycleOwner) { user ->
+            applyUserToHeader(user)
+            adapter?.displayName = user?.name?.takeIf { it.isNotBlank() }
+                ?: binding?.nameTextView?.text?.toString()
+            adapter?.notifyDataSetChanged()
+        }
+    }
+
+    private fun applyUserToHeader(user: User?) {
+        if (user != null && user.name.isNotBlank()) {
+            binding?.nameTextView?.text = user.name
+        }
+        val avatar = binding?.avatarImageView ?: return
+        val avatarUrl = user?.avatarUrl.orEmpty()
+        if (avatarUrl.isNotBlank()) {
+            avatar.scaleType = ImageView.ScaleType.CENTER_CROP
+            Picasso.get()
+                .load(avatarUrl)
+                .fit()
+                .centerCrop()
+                .into(avatar)
         }
     }
 
