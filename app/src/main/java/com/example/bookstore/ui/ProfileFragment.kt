@@ -1,10 +1,16 @@
 package com.example.bookstore.ui
 
+import android.content.DialogInterface
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
@@ -19,10 +25,12 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.local.Book
 import com.example.bookstore.local.User
+import com.example.bookstore.repository.AppResult
 import com.example.bookstore.repository.AuthRepository
 import com.example.bookstore.repository.BookRepository
 import com.example.bookstore.ui.profile.OnReviewClickListener
@@ -40,12 +48,14 @@ class ProfileFragment : Fragment() {
     private var viewModel: MainViewModel? = null
     private var authViewModel: AuthViewModel? = null
 
+    /** Avatar chosen but not yet persisted — uploaded only when the user taps Save. */
+    private var pendingAvatarBitmap: Bitmap? = null
+
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
         if (bitmap != null) {
-            binding?.avatarImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
-            binding?.avatarImageView?.setImageBitmap(bitmap)
+            stageAvatar(bitmap)
         } else {
             Toast.makeText(context, "No image captured", Toast.LENGTH_SHORT).show()
         }
@@ -55,15 +65,22 @@ class ProfileFragment : Fragment() {
         ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            binding?.avatarImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
-            Picasso.get()
-                .load(uri)
-                .fit()
-                .centerCrop()
-                .into(binding?.avatarImageView)
+            val bitmap = decodeBitmap(uri)
+            if (bitmap != null) {
+                stageAvatar(bitmap)
+            } else {
+                Toast.makeText(context, "Couldn't read that image", Toast.LENGTH_SHORT).show()
+            }
         } else {
             Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /** Previews a picked avatar and holds it until the user saves the profile. */
+    private fun stageAvatar(bitmap: Bitmap) {
+        pendingAvatarBitmap = bitmap
+        binding?.avatarImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
+        binding?.avatarImageView?.setImageBitmap(bitmap)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -73,6 +90,7 @@ class ProfileFragment : Fragment() {
         setupView()
         setupReviewsList()
         observeCurrentUser()
+        observeUpdateProfile()
         return binding?.root
     }
 
@@ -125,9 +143,85 @@ class ProfileFragment : Fragment() {
             )
         }
         binding?.avatarImageView?.setOnClickListener { showImageSourceChooser() }
-        binding?.editProfileButton?.setOnClickListener {
-            // TODO: open edit-profile form when AccountViewModel ships in Sprint 3
-            Toast.makeText(context, "Edit Profile coming soon", Toast.LENGTH_SHORT).show()
+        binding?.editProfileButton?.setOnClickListener { showEditProfileDialog() }
+    }
+
+    private fun showEditProfileDialog() {
+        val ctx = requireContext()
+        val currentName = binding?.nameTextView?.text?.toString().orEmpty()
+
+        val input = EditText(ctx).apply {
+            hint = getString(R.string.profile_edit_name_hint)
+            setText(currentName)
+            setSelection(text.length)
+            setPadding(dp(20), dp(8), dp(20), dp(8))
+        }
+
+        val dialog = MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.profile_edit_title)
+            .setView(input)
+            .setNeutralButton(R.string.profile_edit_change_photo, null)
+            .setNegativeButton(R.string.profile_edit_cancel, null)
+            .setPositiveButton(R.string.profile_edit_save, null)
+            .create()
+
+        // Override the button clicks so "Change Photo" doesn't dismiss the dialog
+        // and "Save" can validate the name before closing.
+        dialog.setOnShowListener {
+            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener {
+                showImageSourceChooser()
+            }
+            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+                val name = input.text?.toString()?.trim().orEmpty()
+                if (name.isEmpty()) {
+                    Toast.makeText(ctx, R.string.profile_edit_name_required, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                binding?.saveProgressOverlay?.visibility = View.VISIBLE
+                authViewModel?.updateProfile(name, pendingAvatarBitmap)
+            }
+        }
+        dialog.show()
+    }
+
+    private fun observeUpdateProfile() {
+        authViewModel?.updateProfileResult?.observe(viewLifecycleOwner) { result ->
+            if (result == null) return@observe
+            binding?.saveProgressOverlay?.visibility = View.GONE
+            when (result) {
+                is AppResult.Success -> {
+                    // Persisted — drop the staged bitmap; the currentUser observer
+                    // refreshes the header (name + avatar) from Room.
+                    pendingAvatarBitmap = null
+                    Toast.makeText(context, R.string.profile_edit_success, Toast.LENGTH_SHORT).show()
+                }
+                is AppResult.Error -> Toast.makeText(
+                    context,
+                    getString(R.string.profile_edit_failed, result.message),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            authViewModel?.clearUpdateProfileResult()
+        }
+    }
+
+    private fun decodeBitmap(uri: Uri): Bitmap? {
+        return try {
+            val resolver = requireContext().contentResolver
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(resolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    // Force a software, mutable bitmap so it can be JPEG-compressed for upload.
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                    decoder.isMutableRequired = true
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Images.Media.getBitmap(resolver, uri)
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 
