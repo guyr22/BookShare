@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookstore.databinding.FragmentFeedBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.local.Book
+import com.example.bookstore.repository.AppResult
 import com.example.bookstore.repository.AuthRepository
 import com.example.bookstore.repository.BookRepository
 import com.example.bookstore.ui.feed.BookAdapter
@@ -45,6 +46,7 @@ class FeedFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        binding?.syncProgressBar?.visibility = View.VISIBLE
         viewModel?.syncBooks()
     }
 
@@ -120,6 +122,12 @@ class FeedFragment : Fragment() {
     private fun observeBooks() {
         viewModel?.allBooks?.observe(viewLifecycleOwner) { books ->
             adapter?.submit(books)
+        }
+        viewModel?.syncResult?.observe(viewLifecycleOwner) { result ->
+            binding?.syncProgressBar?.visibility = View.GONE
+            if (result is AppResult.Error) {
+                Toast.makeText(context, "Sync failed: ${result.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
