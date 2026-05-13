@@ -24,4 +24,13 @@
     <string name="addedit_delete_failed">Couldn\'t delete: %s</string>
     <string name="addedit_search_no_results">No books found for that query.</string>
     <string name="addedit_search_failed">Search failed: %s</string>
+
+    <string name="profile_edit_title">Edit Profile</string>
+    <string name="profile_edit_name_hint">Display name</string>
+    <string name="profile_edit_change_photo">Change Photo</string>
+    <string name="profile_edit_save">Save</string>
+    <string name="profile_edit_cancel">Cancel</string>
+    <string name="profile_edit_name_required">Please enter a display name.</string>
+    <string name="profile_edit_success">Profile updated.</string>
+    <string name="profile_edit_failed">Couldn\'t update profile: %s</string>
 </resources>

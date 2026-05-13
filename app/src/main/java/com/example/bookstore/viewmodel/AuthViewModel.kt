@@ -1,5 +1,6 @@
 package com.example.bookstore.viewmodel
 
+import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,6 +38,21 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     fun signOut() = authRepository.signOut()
+
+    private val _updateProfileResult = MutableLiveData<AppResult<User>?>()
+    val updateProfileResult: LiveData<AppResult<User>?> = _updateProfileResult
+
+    /** Updates the signed-in user's display name and (optionally) avatar photo. */
+    fun updateProfile(name: String, avatarBitmap: Bitmap?) {
+        viewModelScope.launch {
+            _updateProfileResult.value = authRepository.updateProfile(name, avatarBitmap)
+        }
+    }
+
+    /** Clears the one-shot result so it isn't re-delivered after a config change. */
+    fun clearUpdateProfileResult() {
+        _updateProfileResult.value = null
+    }
 
     class Factory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
