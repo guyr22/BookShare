@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BookStore</string>
+    <string name="app_name">BookShare</string>
     <string name="feed_card_read_more">Read More</string>
     <string name="feed_title">Community Reviews</string>
     <string name="feed_profile_description">Open profile</string>
