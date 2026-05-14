@@ -30,18 +30,11 @@ class BookRepository(
 
     // ── Google Books search (pre-fill helper for the AddEdit screen) ─────────
 
-    /**
-     * Returns the top Google Books match for [query] mapped into a [Book] shell
-     * (no id / ownerId — those are filled in by the caller before saving).
-     * Returns `Success(null)` when the API returns zero results.
-     */
-    suspend fun searchGoogleBooks(query: String): AppResult<Book?> {
+    suspend fun searchGoogleBooks(query: String): AppResult<List<Book>> {
         return try {
-            val response = NetworkClient.googleBooksApi.searchByTitle(query, maxResults = 1)
-            val item = response.items.firstOrNull()
-                ?: return AppResult.Success(null)
-            val info = item.volumeInfo
-            AppResult.Success(
+            val response = NetworkClient.googleBooksApi.searchByTitle(query, maxResults = 10)
+            val books = response.items.orEmpty().map { item ->
+                val info = item.volumeInfo
                 Book(
                     id = "",
                     title = info.title,
@@ -50,7 +43,8 @@ class BookRepository(
                     coverUrl = info.imageLinks?.thumbnail.orEmpty(),
                     ownerId = ""
                 )
-            )
+            }
+            AppResult.Success(books)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Google Books search failed.", e)
         }
