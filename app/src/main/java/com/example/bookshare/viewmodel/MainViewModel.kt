@@ -40,8 +40,8 @@ class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
 
     // ── Google Books search (AddEdit pre-fill) ───────────────────────────────
 
-    private val _searchResult = MutableLiveData<AppResult<Book?>>()
-    val searchResult: LiveData<AppResult<Book?>> = _searchResult
+    private val _searchResult = MutableLiveData<AppResult<List<Book>>>()
+    val searchResult: LiveData<AppResult<List<Book>>> = _searchResult
 
     fun searchGoogleBooks(query: String) {
         viewModelScope.launch {
