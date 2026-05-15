@@ -9,12 +9,14 @@ interface GoogleBooksApiService {
     @GET("volumes")
     suspend fun searchByTitle(
         @Query("q") title: String,
-        @Query("maxResults") maxResults: Int = 20
+        @Query("maxResults") maxResults: Int = 20,
+        @Query("key") apiKey: String? = null
     ): GoogleBooksResponse
 
     @GET("volumes")
     suspend fun searchByIsbn(
         @Query("q") isbn: String,
-        @Query("maxResults") maxResults: Int = 1
+        @Query("maxResults") maxResults: Int = 1,
+        @Query("key") apiKey: String? = null
     ): GoogleBooksResponse
 }
