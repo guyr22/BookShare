@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookshare.databinding.FragmentFeedBinding
@@ -47,12 +48,22 @@ class FeedFragment : Fragment() {
         return binding?.root
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel?.startRealtimeSync(viewLifecycleOwner.lifecycleScope)
+        authViewModel?.syncUsers()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel?.stopRealtimeSync()
+    }
+
     override fun onResume() {
         super.onResume()
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
         binding?.syncProgressBar?.visibility = View.VISIBLE
         viewModel?.syncBooks()
-        authViewModel?.syncUsers()
     }
 
     override fun onPause() {
