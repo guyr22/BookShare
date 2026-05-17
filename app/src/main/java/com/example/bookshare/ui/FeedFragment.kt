@@ -15,12 +15,10 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookshare.databinding.FragmentFeedBinding
 import com.example.bookshare.local.AppDatabase
-import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.example.bookshare.repository.BookRepository
 import com.example.bookshare.ui.feed.BookAdapter
-import com.example.bookshare.ui.feed.OnBookClickListener
 import com.example.bookshare.viewmodel.AuthViewModel
 import com.example.bookshare.viewmodel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -110,16 +108,6 @@ class FeedFragment : Fragment() {
                 when {
                     ownerId == currentUid -> "You"
                     else -> usersById[ownerId]?.takeIf { it.isNotBlank() } ?: "Reader"
-                }
-            }
-            listener = object : OnBookClickListener {
-                override fun onBookClick(book: Book) {
-                    Toast.makeText(context, "Tapped: ${book.title}", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onBookLongClick(book: Book): Boolean {
-                    Toast.makeText(context, "Long-pressed: ${book.title}", Toast.LENGTH_SHORT).show()
-                    return true
                 }
             }
         }
