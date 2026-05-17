@@ -15,6 +15,9 @@ class ReviewsAdapter(
     /** Author name shown in every card header. Profile is "my reviews", so this is the current user. */
     var displayName: String? = null
 
+    /** Current user's avatar URL shown in every card header. */
+    var avatarUrl: String? = null
+
     override fun getItemCount(): Int = items?.size ?: 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
@@ -23,7 +26,7 @@ class ReviewsAdapter(
     }
 
     override fun onBindViewHolder(holder: ReviewViewHolder, position: Int) {
-        items?.get(position)?.let { holder.bind(it, displayName) }
+        items?.get(position)?.let { holder.bind(it, displayName, avatarUrl) }
     }
 
     fun submit(newItems: List<Book>) {

@@ -12,11 +12,21 @@ class BookViewHolder(
     private val binding: ItemBookBinding
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(book: Book, ownerName: String?) {
+    fun bind(book: Book, ownerName: String?, ownerAvatarUrl: String?) {
         binding.titleTextView.text = book.title
         binding.authorTextView.text = book.author
         binding.ownerNameTextView.text = ownerName ?: book.ownerId
         bindCollapsibleDescription(book.description)
+
+        if (!ownerAvatarUrl.isNullOrBlank()) {
+            Picasso.get()
+                .load(ownerAvatarUrl)
+                .fit()
+                .centerCrop()
+                .into(binding.ownerAvatarImageView)
+        } else {
+            binding.ownerAvatarImageView.setImageDrawable(null)
+        }
 
         if (book.coverUrl.isNotBlank()) {
             Picasso.get()

@@ -1,9 +1,12 @@
 package com.example.bookshare.ui
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -14,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentFeedBinding
 import com.example.bookshare.local.AppDatabase
 import com.example.bookshare.repository.AppResult
@@ -23,6 +27,7 @@ import com.example.bookshare.ui.feed.BookAdapter
 import com.example.bookshare.viewmodel.AuthViewModel
 import com.example.bookshare.viewmodel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.squareup.picasso.Picasso
 
 class FeedFragment : Fragment() {
 
@@ -34,6 +39,9 @@ class FeedFragment : Fragment() {
     /** ownerId → display name, populated from the synced user cache. */
     private val usersById = mutableMapOf<String, String>()
 
+    /** ownerId → avatar URL, populated from the synced user cache. */
+    private val avatarsById = mutableMapOf<String, String>()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
         applyTopInset()
@@ -43,6 +51,7 @@ class FeedFragment : Fragment() {
         setupFab()
         observeBooks()
         observeUsers()
+        observeCurrentUser()
         return binding?.root
     }
 
@@ -121,6 +130,7 @@ class FeedFragment : Fragment() {
                     else -> usersById[ownerId]?.takeIf { it.isNotBlank() } ?: "Reader"
                 }
             }
+            ownerAvatarProvider = { ownerId -> avatarsById[ownerId] }
         }
         binding?.booksRecyclerView?.layoutManager = LinearLayoutManager(context)
         binding?.booksRecyclerView?.adapter = adapter
@@ -138,10 +148,30 @@ class FeedFragment : Fragment() {
         }
     }
 
+    private fun observeCurrentUser() {
+        val btn = binding?.feedProfileButton ?: return
+        authViewModel?.currentUser?.observe(viewLifecycleOwner) { user ->
+            val url = user?.avatarUrl.orEmpty()
+            if (url.isNotBlank()) {
+                btn.imageTintList = null
+                btn.scaleType = ImageView.ScaleType.CENTER_CROP
+                Picasso.get().load(url).fit().centerCrop().into(btn)
+            } else {
+                btn.imageTintList = ColorStateList.valueOf(Color.WHITE)
+                btn.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                btn.setImageResource(R.drawable.ic_account)
+            }
+        }
+    }
+
     private fun observeUsers() {
         authViewModel?.users?.observe(viewLifecycleOwner) { users ->
             usersById.clear()
-            users.forEach { usersById[it.id] = it.name }
+            avatarsById.clear()
+            users.forEach {
+                usersById[it.id] = it.name
+                avatarsById[it.id] = it.avatarUrl
+            }
             // Names may arrive after the books were bound — re-bind to apply them.
             adapter?.notifyDataSetChanged()
         }

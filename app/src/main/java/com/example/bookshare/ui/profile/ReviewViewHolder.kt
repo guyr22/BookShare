@@ -21,13 +21,23 @@ class ReviewViewHolder(
         }
     }
 
-    fun bind(book: Book, displayName: String?) {
+    fun bind(book: Book, displayName: String?, avatarUrl: String?) {
         current = book
         binding.authorName.text = displayName ?: "You"
         binding.bookTitle.text = book.title
         bindCollapsibleDescription(
             if (book.description.isNotBlank()) book.description else book.author
         )
+
+        if (!avatarUrl.isNullOrBlank()) {
+            Picasso.get()
+                .load(avatarUrl)
+                .fit()
+                .centerCrop()
+                .into(binding.authorAvatar)
+        } else {
+            binding.authorAvatar.setImageDrawable(null)
+        }
 
         if (book.coverUrl.isNotBlank()) {
             Picasso.get()
