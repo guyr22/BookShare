@@ -6,10 +6,15 @@ import com.example.bookshare.BuildConfig
 import com.example.bookshare.local.Book
 import com.example.bookshare.local.BookDao
 import com.example.bookshare.network.NetworkClient
+import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.delay
+import com.google.firebase.database.ServerValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import retrofit2.HttpException
 
@@ -83,10 +88,12 @@ class BookRepository(
         return try {
             val key = booksRef.push().key
                 ?: return AppResult.Error("Firebase failed to generate a key.")
-            val bookWithId = book.copy(id = key, lastUpdated = System.currentTimeMillis())
-            booksRef.child(key).setValue(bookWithId.toFirebaseMap()).await()
-            bookDao.insert(bookWithId)
-            AppResult.Success(bookWithId)
+            val bookWithKey = book.copy(id = key)
+            booksRef.child(key).setValue(bookWithKey.toFirebaseMap()).await()
+            val serverTimestamp = readServerTimestamp(key)
+            val finalBook = bookWithKey.copy(lastUpdated = serverTimestamp)
+            bookDao.insert(finalBook)
+            AppResult.Success(finalBook)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Failed to add book.", e)
         }
@@ -94,8 +101,9 @@ class BookRepository(
 
     suspend fun updateBook(book: Book): AppResult<Book> {
         return try {
-            val updated = book.copy(lastUpdated = System.currentTimeMillis())
-            booksRef.child(updated.id).setValue(updated.toFirebaseMap()).await()
+            booksRef.child(book.id).setValue(book.toFirebaseMap()).await()
+            val serverTimestamp = readServerTimestamp(book.id)
+            val updated = book.copy(lastUpdated = serverTimestamp)
             bookDao.update(updated)
             AppResult.Success(updated)
         } catch (e: Exception) {
@@ -119,9 +127,9 @@ class BookRepository(
      * Full save pipeline:
      *   1. If [coverBitmap] is provided, upload it to Firebase Storage and use
      *      the returned URL as the book's coverUrl.
-     *   2. Generate a Firebase key locally (no network call required).
-     *   3. Write the finished book to Room immediately so the UI updates at once.
-     *   4. Push the same record to Firebase Realtime Database.
+     *   2. Resolve the Firebase key (new book gets push key; edit keeps its id).
+     *   3. Write to Firebase with ServerValue.TIMESTAMP so all devices share the same clock.
+     *   4. Read the server-assigned timestamp back and persist to Room.
      *
      * For edits, pass the existing book with a non-null [coverBitmap] only when
      * the user has selected a new image; otherwise the existing coverUrl is kept.
@@ -146,18 +154,15 @@ class BookRepository(
                 book.id
             }
 
-            // Step 3 – build the final record with resolved id, coverUrl, and timestamp
-            val finalBook = book.copy(
-                id = key,
-                coverUrl = coverUrl,
-                lastUpdated = System.currentTimeMillis()
-            )
+            val bookWithKey = book.copy(id = key, coverUrl = coverUrl)
 
-            // Step 4 – persist to Room first so the UI reacts immediately
+            // Step 3 – push to Firebase with ServerValue.TIMESTAMP (server sets the timestamp)
+            booksRef.child(key).setValue(bookWithKey.toFirebaseMap()).await()
+
+            // Step 4 – read back the server timestamp and persist to Room
+            val serverTimestamp = readServerTimestamp(key)
+            val finalBook = bookWithKey.copy(lastUpdated = serverTimestamp)
             bookDao.insert(finalBook)
-
-            // Step 5 – push to Firebase Realtime Database
-            booksRef.child(key).setValue(finalBook.toFirebaseMap()).await()
 
             AppResult.Success(finalBook)
         } catch (e: Exception) {
@@ -176,11 +181,15 @@ class BookRepository(
      */
     suspend fun syncFromFirebase(): AppResult<Int> {
         return try {
-            val since = bookDao.getMaxLastUpdated() ?: 0L
+            val maxKnown = bookDao.getMaxLastUpdated() ?: 0L
+            // Subtract a 60-second buffer so books whose server timestamp landed just
+            // before our local max are not silently skipped by the delta query.
+            // INSERT OR REPLACE in the DAO makes re-fetching duplicates safe.
+            val since = maxOf(0L, maxKnown - 60_000L)
 
             val snapshot = booksRef
                 .orderByChild("lastUpdated")
-                .startAt((since + 1).toDouble())   // +1 excludes the record we already have
+                .startAt(since.toDouble())
                 .get()
                 .await()
 
@@ -194,6 +203,45 @@ class BookRepository(
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Sync failed.", e)
         }
+    }
+
+    // ── Real-time listener ───────────────────────────────────────────────────
+
+    private var childListener: ChildEventListener? = null
+
+    /**
+     * Attaches a Firebase ChildEventListener that writes every add/change/remove
+     * directly into Room. The Room LiveData then propagates the change to the UI
+     * automatically, with no manual sync or logout/login required.
+     *
+     * Safe to call multiple times — re-attaches only if not already listening.
+     */
+    fun startRealtimeSync(scope: CoroutineScope) {
+        if (childListener != null) return
+        childListener = object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                snapshot.toBook()?.let { book ->
+                    scope.launch(Dispatchers.IO) { bookDao.insert(book) }
+                }
+            }
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                snapshot.toBook()?.let { book ->
+                    scope.launch(Dispatchers.IO) { bookDao.insert(book) }
+                }
+            }
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                val id = snapshot.key ?: return
+                scope.launch(Dispatchers.IO) { bookDao.deleteById(id) }
+            }
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {}
+        }
+        booksRef.addChildEventListener(childListener!!)
+    }
+
+    fun stopRealtimeSync() {
+        childListener?.let { booksRef.removeEventListener(it) }
+        childListener = null
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -215,12 +263,17 @@ class BookRepository(
         }
     }
 
+    /** Reads the lastUpdated value that Firebase set server-side after a write. */
+    private suspend fun readServerTimestamp(key: String): Long =
+        booksRef.child(key).child("lastUpdated").get().await()
+            .getValue(Long::class.java) ?: System.currentTimeMillis()
+
     private fun Book.toFirebaseMap(): Map<String, Any> = mapOf(
         "title" to title,
         "author" to author,
         "description" to description,
         "coverUrl" to coverUrl,
         "ownerId" to ownerId,
-        "lastUpdated" to lastUpdated
+        "lastUpdated" to ServerValue.TIMESTAMP
     )
 }
