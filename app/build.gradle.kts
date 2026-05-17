@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.navigation.safeargs)
+}
+
+// Books API key is read from local.properties (BOOKS_API_KEY=...) so it stays out
+// of version control. Empty when unset — the request then omits the key param.
+val booksApiKey: String = run {
+    val props = Properties()
+    val localProps = rootProject.file("local.properties")
+    if (localProps.exists()) localProps.inputStream().use { props.load(it) }
+    props.getProperty("BOOKS_API_KEY", "")
 }
 
 android {
@@ -21,6 +32,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BOOKS_API_KEY", "\"$booksApiKey\"")
     }
 
     buildTypes {
@@ -38,6 +51,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

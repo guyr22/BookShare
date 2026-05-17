@@ -2,6 +2,7 @@ package com.example.bookshare.repository
 
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
+import com.example.bookshare.BuildConfig
 import com.example.bookshare.local.Book
 import com.example.bookshare.local.BookDao
 import com.example.bookshare.network.NetworkClient
@@ -15,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import retrofit2.HttpException
 
 class BookRepository(
     private val bookDao: BookDao,
@@ -37,23 +39,47 @@ class BookRepository(
     // ── Google Books search (pre-fill helper for the AddEdit screen) ─────────
 
     suspend fun searchGoogleBooks(query: String): AppResult<List<Book>> {
-        return try {
-            val response = NetworkClient.googleBooksApi.searchByTitle(query, maxResults = 10)
-            val books = response.items.orEmpty().map { item ->
-                val info = item.volumeInfo
-                Book(
-                    id = "",
-                    title = info.title,
-                    author = info.authors.joinToString(", "),
-                    description = info.description,
-                    coverUrl = info.imageLinks?.thumbnail.orEmpty(),
-                    ownerId = ""
+        // Send the key when configured (local.properties → BuildConfig). Keyless
+        // requests share a tiny per-IP quota and 429 easily.
+        val apiKey = BuildConfig.BOOKS_API_KEY.ifBlank { null }
+        var lastError: Exception? = null
+
+        // Two attempts: a transient 429 is retried once after a short backoff. A
+        // persistent 429 means the (keyless) quota is exhausted — surface a clear
+        // message pointing at BOOKS_API_KEY.
+        repeat(2) { attempt ->
+            try {
+                val response = NetworkClient.googleBooksApi.searchByTitle(
+                    query, maxResults = 10, apiKey = apiKey
                 )
+                val books = response.items.orEmpty().map { item ->
+                    val info = item.volumeInfo
+                    Book(
+                        id = "",
+                        title = info.title,
+                        author = info.authors.joinToString(", "),
+                        description = info.description,
+                        coverUrl = info.imageLinks?.thumbnail.orEmpty(),
+                        ownerId = ""
+                    )
+                }
+                return AppResult.Success(books)
+            } catch (e: HttpException) {
+                lastError = e
+                when {
+                    e.code() == 429 && attempt == 0 -> delay(1500L) // back off, then retry
+                    e.code() == 429 -> return AppResult.Error(
+                        "Google Books is rate-limiting requests (HTTP 429). Set BOOKS_API_KEY " +
+                            "in local.properties, or wait a moment and try again.",
+                        e
+                    )
+                    else -> return AppResult.Error("Google Books search failed (HTTP ${e.code()}).", e)
+                }
+            } catch (e: Exception) {
+                return AppResult.Error(e.message ?: "Google Books search failed.", e)
             }
-            AppResult.Success(books)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Google Books search failed.", e)
         }
+        return AppResult.Error("Google Books search failed.", lastError)
     }
 
     // ── Firebase writes (write-through: Firebase first, then Room) ───────────
