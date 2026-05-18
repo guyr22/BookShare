@@ -11,7 +11,7 @@
     <string name="addedit_edit_title">Edit Book</string>
     <string name="addedit_back_description">Back</string>
     <string name="addedit_search_hint">Search Google Books</string>
-    <string name="addedit_search_subhint">Press enter to auto-fill</string>
+    <string name="addedit_search_subhint">Type at least 4 letters to see matches</string>
     <string name="addedit_search_icon_description">Search</string>
     <string name="addedit_cover_description">Book cover</string>
     <string name="addedit_title_hint">Title</string>
