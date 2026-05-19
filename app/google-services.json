@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "894437141244",
+    "project_id": "bookshare-bf689",
+    "storage_bucket": "bookshare-bf689.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894437141244:android:c14316f412b527f5a8c579",
+        "android_client_info": {
+          "package_name": "com.example.bookstore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjUz9xFu-1BTR3uLqa_XniiuGBLAUA5u4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
