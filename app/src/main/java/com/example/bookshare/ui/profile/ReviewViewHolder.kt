@@ -48,6 +48,7 @@ class ReviewViewHolder(
         } else {
             binding.bookCover.setImageDrawable(null)
         }
+
     }
 
     /**

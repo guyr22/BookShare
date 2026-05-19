@@ -132,14 +132,42 @@
                 android:orientation="horizontal"
                 android:padding="12dp">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/coverImageView"
+                <FrameLayout
                     android:layout_width="78dp"
-                    android:layout_height="112dp"
-                    android:background="@drawable/bg_book_cover_placeholder"
-                    android:contentDescription="@string/addedit_cover_description"
-                    android:scaleType="centerCrop"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.BookShare.BookCover" />
+                    android:layout_height="112dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/coverImageView"
+                        android:layout_width="78dp"
+                        android:layout_height="112dp"
+                        android:background="@drawable/bg_book_cover_placeholder"
+                        android:clickable="true"
+                        android:contentDescription="@string/addedit_cover_description"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.BookShare.BookCover" />
+
+                    <!-- Camera badge: indicates the cover is tappable to change -->
+                    <FrameLayout
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/bg_camera_badge"
+                        android:clickable="false"
+                        android:elevation="2dp">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_camera" />
+
+                    </FrameLayout>
+
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"

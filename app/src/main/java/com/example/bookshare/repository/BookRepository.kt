@@ -60,7 +60,7 @@ class BookRepository(
                         title = info.title,
                         author = info.authors.joinToString(", "),
                         description = info.description,
-                        coverUrl = info.imageLinks?.thumbnail.orEmpty(),
+                        coverUrl = info.imageLinks?.thumbnail.orEmpty().replace("http://", "https://"),
                         ownerId = ""
                     )
                 }
