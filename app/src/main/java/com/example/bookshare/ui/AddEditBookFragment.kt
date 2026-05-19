@@ -1,9 +1,14 @@
 package com.example.bookshare.ui
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -11,7 +16,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -30,6 +38,7 @@ import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
 import com.example.bookshare.ui.search.BookSearchResultAdapter
 import com.example.bookshare.viewmodel.MainViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 
@@ -44,8 +53,11 @@ class AddEditBookFragment : Fragment() {
     /** Latest fully-loaded book in edit mode (carries id, ownerId, lastUpdated). */
     private var loadedBook: Book? = null
 
-    /** Cover URL chosen by the user (from Google Books search or the loaded book). */
+    /** Cover URL from Google Books search or the loaded book — used when no bitmap is staged. */
     private var pendingCoverUrl: String = ""
+
+    /** Cover bitmap picked by the user — takes priority over pendingCoverUrl on save. */
+    private var pendingCoverBitmap: Bitmap? = null
 
     /** Whether we've already navigated back so we ignore further LiveData emissions. */
     private var hasNavigatedBack: Boolean = false
@@ -55,12 +67,32 @@ class AddEditBookFragment : Fragment() {
     private var pendingQuery: String = ""
     private val searchRunnable = Runnable { triggerSearch(pendingQuery) }
 
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) stageCoverBitmap(bitmap)
+        else Toast.makeText(context, "No image captured", Toast.LENGTH_SHORT).show()
+    }
+
+    private val galleryLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val bitmap = decodeBitmap(uri)
+            if (bitmap != null) stageCoverBitmap(bitmap)
+            else Toast.makeText(context, "Couldn't read that image", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentAddEditBookBinding.inflate(layoutInflater, container, false)
         applyTopInset()
         setupViewModel()
         setupToolbar()
         setupSearch()
+        setupCoverImagePicker()
         setupSaveAndDelete()
         observeViewModel()
         return binding?.root
@@ -158,6 +190,33 @@ class AddEditBookFragment : Fragment() {
         imm?.hideSoftInputFromWindow(view?.windowToken, 0)
     }
 
+    private fun setupCoverImagePicker() {
+        binding?.coverImageView?.setOnClickListener { showCoverImageSourceChooser() }
+    }
+
+    private fun showCoverImageSourceChooser() {
+        val options = arrayOf("Take a photo", "Choose from gallery")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.addedit_cover_source_title)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> cameraLauncher.launch(null)
+                    1 -> galleryLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            }
+            .show()
+    }
+
+    private fun stageCoverBitmap(bitmap: Bitmap) {
+        pendingCoverBitmap = bitmap
+        pendingCoverUrl = ""
+        val target = binding?.coverImageView ?: return
+        target.scaleType = ImageView.ScaleType.CENTER_CROP
+        target.setImageBitmap(bitmap)
+    }
+
     private fun setupSaveAndDelete() {
         binding?.saveButton?.setOnClickListener { onSaveClicked() }
         binding?.deleteButton?.setOnClickListener { onDeleteClicked() }
@@ -237,8 +296,11 @@ class AddEditBookFragment : Fragment() {
         binding?.titleEditText?.setText(match.title)
         binding?.authorEditText?.setText(match.author)
         binding?.descriptionEditText?.setText(match.description)
-        pendingCoverUrl = match.coverUrl
-        loadCoverIntoView(match.coverUrl)
+        // Only update the cover from Google Books if the user hasn't picked their own photo.
+        if (pendingCoverBitmap == null) {
+            pendingCoverUrl = match.coverUrl
+            loadCoverIntoView(match.coverUrl)
+        }
     }
 
     private fun loadCoverIntoView(url: String) {
@@ -247,6 +309,24 @@ class AddEditBookFragment : Fragment() {
             target.setImageDrawable(null)
         } else {
             Picasso.get().load(url).fit().centerCrop().into(target)
+        }
+    }
+
+    private fun decodeBitmap(uri: Uri): Bitmap? {
+        return try {
+            val resolver = requireContext().contentResolver
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(resolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                    decoder.isMutableRequired = true
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Images.Media.getBitmap(resolver, uri)
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -268,7 +348,7 @@ class AddEditBookFragment : Fragment() {
                 title = title,
                 author = author,
                 description = description,
-                coverUrl = pendingCoverUrl
+                coverUrl = if (pendingCoverBitmap != null) "" else pendingCoverUrl
             )
         } else {
             Book(
@@ -276,13 +356,13 @@ class AddEditBookFragment : Fragment() {
                 title = title,
                 author = author,
                 description = description,
-                coverUrl = pendingCoverUrl,
+                coverUrl = if (pendingCoverBitmap != null) "" else pendingCoverUrl,
                 ownerId = currentUid
             )
         }
 
         binding?.saveProgressOverlay?.visibility = View.VISIBLE
-        viewModel?.saveBook(book)
+        viewModel?.saveBook(book, coverBitmap = pendingCoverBitmap)
     }
 
     private fun onDeleteClicked() {
