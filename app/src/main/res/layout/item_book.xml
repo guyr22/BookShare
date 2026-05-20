@@ -40,10 +40,22 @@
             android:textColor="@color/bookshare_text_strong"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="@id/ownerAvatarImageView"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/dateTextView"
             app:layout_constraintStart_toEndOf="@id/ownerAvatarImageView"
             app:layout_constraintTop_toTopOf="@id/ownerAvatarImageView"
             tools:text="Alex Reader" />
+
+        <TextView
+            android:id="@+id/dateTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/bookshare_text_muted"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@id/ownerAvatarImageView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ownerAvatarImageView"
+            tools:text="May 25" />
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/coverImageView"
