@@ -10,7 +10,7 @@ activityKtx = "1.8.0"
 constraintlayout = "2.1.4"
 firebaseBom = "33.1.0"
 googleServices = "4.4.2"
-navigationVersion = "2.7.7"
+navigationVersion = "2.9.8"
 kotlin = "2.1.0"
 
 [libraries]
