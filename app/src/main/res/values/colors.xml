@@ -9,4 +9,13 @@
     <color name="bookshare_text_secondary">#8C949E</color>
     <color name="bookshare_field_stroke">#D4D9E0</color>
     <color name="bookshare_background">#FFFFFFFF</color>
+
+    <color name="bookshare_text_strong">#21262E</color>
+    <color name="bookshare_text_body">#4D5761</color>
+    <color name="bookshare_text_muted">#6B7580</color>
+    <color name="bookshare_card_stroke">#E0E3E8</color>
+    <color name="bookshare_body_background">#F7F7FA</color>
+    <color name="bookshare_avatar_placeholder">#C5D4E4</color>
+    <color name="bookshare_book_cover_dark">#1A1A1F</color>
+    <color name="bookshare_book_cover_red">#D94D40</color>
 </resources>
