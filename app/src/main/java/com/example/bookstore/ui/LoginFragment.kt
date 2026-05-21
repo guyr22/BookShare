@@ -5,20 +5,39 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
 import com.example.bookstore.databinding.FragmentLoginBinding
 
 class LoginFragment : Fragment() {
 
-    private var _binding: FragmentLoginBinding? = null
-    private val binding get() = _binding!!
+    private var binding: FragmentLoginBinding? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLoginBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentLoginBinding.inflate(layoutInflater, container, false)
+        setupView()
+        return binding?.root
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun setupView() {
+        binding?.loginButton?.setOnClickListener {
+            val email = binding?.emailEditText?.text.toString()
+            val password = binding?.passwordEditText?.text.toString()
+            // TODO: wire to AuthViewModel in Sprint 3 — navigate directly for now
+            navigateToFeed(it)
+        }
+
+        binding?.goToRegisterTextView?.setOnClickListener {
+            navigateToRegister(it)
+        }
+    }
+
+    private fun navigateToFeed(view: View) {
+        val action = LoginFragmentDirections.actionLoginToFeed()
+        Navigation.findNavController(view).navigate(action)
+    }
+
+    private fun navigateToRegister(view: View) {
+        val action = LoginFragmentDirections.actionLoginToRegister()
+        Navigation.findNavController(view).navigate(action)
     }
 }
