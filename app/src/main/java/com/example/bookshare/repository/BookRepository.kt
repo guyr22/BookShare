@@ -256,6 +256,8 @@ class BookRepository(
                 description = child("description").getValue(String::class.java) ?: "",
                 coverUrl = child("coverUrl").getValue(String::class.java) ?: "",
                 ownerId = child("ownerId").getValue(String::class.java) ?: return null,
+                rating = (child("rating").getValue(Long::class.java) ?: 0L).toInt(),
+                review = child("review").getValue(String::class.java) ?: "",
                 lastUpdated = child("lastUpdated").getValue(Long::class.java)
                     ?: System.currentTimeMillis()
             )
@@ -275,6 +277,8 @@ class BookRepository(
         "description" to description,
         "coverUrl" to coverUrl,
         "ownerId" to ownerId,
+        "rating" to rating,
+        "review" to review,
         "lastUpdated" to ServerValue.TIMESTAMP
     )
 }
