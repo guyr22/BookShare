@@ -26,7 +26,7 @@ class LoginFragment : Fragment() {
             navigateToFeed(it)
         }
 
-        binding?.goToRegisterTextView?.setOnClickListener {
+        binding?.signUpButton?.setOnClickListener {
             navigateToRegister(it)
         }
     }

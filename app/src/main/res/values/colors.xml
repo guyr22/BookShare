@@ -2,4 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="bookshare_blue">#3D5A80</color>
+    <color name="bookshare_blue_dark">#2C4768</color>
+    <color name="bookshare_text_primary">#1F2937</color>
+    <color name="bookshare_text_secondary">#6B7280</color>
+    <color name="bookshare_field_stroke">#D1D5DB</color>
+    <color name="bookshare_background">#FFFFFFFF</color>
 </resources>
