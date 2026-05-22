@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.bookshare.local.User
 import com.example.bookshare.local.UserDao
+import com.example.bookshare.network.toErrorResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -57,7 +58,7 @@ class AuthRepository(
 
             AppResult.Success(user)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Sign-in failed.", e)
+            e.toErrorResult("Sign-in failed.")
         }
     }
 
@@ -80,7 +81,7 @@ class AuthRepository(
 
             AppResult.Success(user)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Registration failed.", e)
+            e.toErrorResult("Registration failed.")
         }
     }
 
@@ -134,7 +135,7 @@ class AuthRepository(
 
             AppResult.Success(user)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Profile update failed.", e)
+            e.toErrorResult("Profile update failed.")
         }
     }
 
@@ -162,7 +163,7 @@ class AuthRepository(
 
             AppResult.Success(newUsers.size)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "User sync failed.", e)
+            e.toErrorResult("User sync failed.")
         }
     }
 
