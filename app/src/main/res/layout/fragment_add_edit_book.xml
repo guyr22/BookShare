@@ -176,42 +176,46 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/titleInputLayout"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/addedit_title_hint"
+                        android:textColor="@color/bookshare_text_secondary"
+                        android:textSize="10sp" />
+
+                    <EditText
+                        android:id="@+id/titleEditText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/addedit_title_hint">
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_input_field"
+                        android:inputType="textCapSentences"
+                        android:maxLines="2"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="9dp"
+                        android:textColor="@color/bookshare_text_strong"
+                        android:textSize="13sp" />
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/titleEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapSentences"
-                            android:maxLines="2"
-                            android:textColor="@color/bookshare_text_strong"
-                            android:textSize="15sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/addedit_author_hint"
+                        android:textColor="@color/bookshare_text_secondary"
+                        android:textSize="10sp" />
 
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/authorInputLayout"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    <EditText
+                        android:id="@+id/authorEditText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:hint="@string/addedit_author_hint">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/authorEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapWords"
-                            android:maxLines="1"
-                            android:textColor="@color/bookshare_text_strong"
-                            android:textSize="13sp" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_input_field"
+                        android:inputType="textCapWords"
+                        android:maxLines="1"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="9dp"
+                        android:textColor="@color/bookshare_text_strong"
+                        android:textSize="13sp" />
 
                 </LinearLayout>
 
