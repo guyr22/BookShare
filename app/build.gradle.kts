@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.navigation.safeargs)
 }
@@ -56,6 +58,14 @@ dependencies {
 
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
