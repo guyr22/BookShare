@@ -24,13 +24,14 @@ import androidx.room.RoomDatabase
  * 4. Bump [version] and supply a Migration.
  */
 @Database(
-    entities = [User::class],
-    version = 1,
+    entities = [User::class, Book::class],
+    version = 2,
     exportSchema = true          // keeps a JSON schema history in app/schemas/ — good for code review
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
+    abstract fun bookDao(): BookDao
 
     companion object {
 
