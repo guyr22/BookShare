@@ -1,5 +1,6 @@
 package com.example.bookstore.viewmodel
 
+import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -33,6 +34,14 @@ class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
 
     fun getBooksByOwner(ownerId: String): LiveData<List<Book>> =
         bookRepository.getBooksByOwner(ownerId)
+
+    // ── Save (new + edit with optional cover image) ───────────────────────────
+
+    fun saveBook(book: Book, coverBitmap: Bitmap? = null) {
+        viewModelScope.launch {
+            _bookOperation.value = bookRepository.saveBook(book, coverBitmap)
+        }
+    }
 
     // ── CRUD ─────────────────────────────────────────────────────────────────
 
