@@ -3,6 +3,7 @@ package com.example.bookstore.repository
 import androidx.lifecycle.LiveData
 import com.example.bookstore.local.Book
 import com.example.bookstore.local.BookDao
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
@@ -57,7 +58,55 @@ class BookRepository(
         }
     }
 
+    // ── Delta-fetch sync (course requirement) ────────────────────────────────
+
+    /**
+     * Queries Firebase for every book whose lastUpdated is strictly newer than
+     * the highest timestamp already stored in Room, then persists the results.
+     *
+     * Call this from a ViewModel (viewModelScope) on app start or pull-to-refresh.
+     * Returns the number of new/updated records written to Room.
+     */
+    suspend fun syncFromFirebase(): AppResult<Int> {
+        return try {
+            val since = bookDao.getMaxLastUpdated() ?: 0L
+
+            val snapshot = booksRef
+                .orderByChild("lastUpdated")
+                .startAt((since + 1).toDouble())   // +1 excludes the record we already have
+                .get()
+                .await()
+
+            val newBooks = snapshot.children.mapNotNull { it.toBook() }
+
+            if (newBooks.isNotEmpty()) {
+                bookDao.insertAll(newBooks)
+            }
+
+            AppResult.Success(newBooks.size)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Sync failed.", e)
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private fun DataSnapshot.toBook(): Book? {
+        return try {
+            Book(
+                id = key ?: return null,
+                title = child("title").getValue(String::class.java) ?: "",
+                author = child("author").getValue(String::class.java) ?: "",
+                description = child("description").getValue(String::class.java) ?: "",
+                coverUrl = child("coverUrl").getValue(String::class.java) ?: "",
+                ownerId = child("ownerId").getValue(String::class.java) ?: return null,
+                lastUpdated = child("lastUpdated").getValue(Long::class.java)
+                    ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     private fun Book.toFirebaseMap(): Map<String, Any> = mapOf(
         "title" to title,
