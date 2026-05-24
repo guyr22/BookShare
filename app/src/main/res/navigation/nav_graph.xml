@@ -53,12 +53,22 @@
         <action
             android:id="@+id/action_profile_to_addEditBook"
             app:destination="@id/addEditBookFragment" />
+        <action
+            android:id="@+id/action_profile_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
         android:id="@+id/addEditBookFragment"
         android:name="com.example.bookstore.ui.AddEditBookFragment"
         android:label="Add / Edit Book"
-        tools:layout="@layout/fragment_add_edit_book" />
+        tools:layout="@layout/fragment_add_edit_book">
+        <argument
+            android:name="bookId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
 </navigation>
