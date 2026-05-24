@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_review_card"
+    android:padding="12dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/authorAvatar"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@color/bookshare_avatar_placeholder"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.BookShare.Circle" />
+
+    <TextView
+        android:id="@+id/authorName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Alex Reader"
+        android:textColor="@color/bookshare_text_strong"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/authorAvatar"
+        app:layout_constraintEnd_toStartOf="@id/cardMoreButton"
+        app:layout_constraintStart_toEndOf="@id/authorAvatar"
+        app:layout_constraintTop_toTopOf="@id/authorAvatar" />
+
+    <ImageView
+        android:id="@+id/cardMoreButton"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:contentDescription="More options"
+        android:src="@drawable/ic_more_horiz"
+        app:layout_constraintBottom_toBottomOf="@id/authorAvatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/authorAvatar" />
+
+    <View
+        android:id="@+id/bookCover"
+        android:layout_width="60dp"
+        android:layout_height="86dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_book_cover_dark"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/authorAvatar" />
+
+    <TextView
+        android:id="@+id/bookTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Project Hail Mary"
+        android:textColor="@color/bookshare_text_strong"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bookCover"
+        app:layout_constraintTop_toTopOf="@id/bookCover" />
+
+    <TextView
+        android:id="@+id/bookDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp"
+        android:fontFamily="sans-serif"
+        android:lineSpacingMultiplier="1.4"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor."
+        android:textColor="@color/bookshare_text_body"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bookCover"
+        app:layout_constraintTop_toBottomOf="@id/bookTitle" />
+
+    <TextView
+        android:id="@+id/readMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="6dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Read More"
+        android:textColor="@color/bookshare_blue"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/bookCover"
+        app:layout_constraintTop_toBottomOf="@id/bookDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
