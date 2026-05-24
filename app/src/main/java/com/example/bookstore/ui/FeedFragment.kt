@@ -6,6 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,10 +24,22 @@ class FeedFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
+        applyTopInset()
         setupRecyclerView()
         setupToolbar()
         setupFab()
         return binding?.root
+    }
+
+    private fun applyTopInset() {
+        val toolbar = binding?.feedToolbar ?: return
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+            val top = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            view.updatePadding(top = top)
+            insets
+        }
     }
 
     override fun onResume() {
