@@ -11,6 +11,9 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.example.bookstore.databinding.ActivityMainBinding
+import com.example.bookstore.local.AppDatabase
+import com.example.bookstore.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
@@ -51,14 +54,33 @@ class MainActivity : AppCompatActivity() {
         binding?.topAppBar?.let { setSupportActionBar(it) }
         val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
         navController = navHost?.navController
-        navController?.let {
-            NavigationUI.setupActionBarWithNavController(this, it)
-            it.addOnDestinationChangedListener { _, destination, _ ->
+        navController?.let { controller ->
+            applyAutoLogin(controller)
+            NavigationUI.setupActionBarWithNavController(this, controller)
+            controller.addOnDestinationChangedListener { _, destination, _ ->
                 val isProfile = destination.id == R.id.profileFragment
                 binding?.topAppBar?.isVisible = !isProfile
                 setStatusBarTextLight(isLight = !isProfile)
             }
         }
+    }
+
+    /**
+     * If Firebase already has a signed-in user, swap the nav graph's start
+     * destination to Feed so returning users never see the Login screen.
+     * Called before NavigationUI.setupActionBarWithNavController so the
+     * ActionBar's "up" arrow logic uses the correct start destination.
+     */
+    private fun applyAutoLogin(controller: NavController) {
+        val authRepository = AuthRepository(
+            FirebaseAuth.getInstance(),
+            AppDatabase.getInstance(this).userDao()
+        )
+        if (!authRepository.isLoggedIn()) return
+
+        val graph = controller.navInflater.inflate(R.navigation.nav_graph)
+        graph.setStartDestination(R.id.feedFragment)
+        controller.graph = graph
     }
 
     private fun setStatusBarTextLight(isLight: Boolean) {
