@@ -40,14 +40,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/authorAvatar" />
 
-    <View
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/bookCover"
         android:layout_width="60dp"
         android:layout_height="86dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_book_cover_dark"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/authorAvatar" />
+        app:layout_constraintTop_toBottomOf="@id/authorAvatar"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.BookShare.BookCover" />
 
     <TextView
         android:id="@+id/bookTitle"
