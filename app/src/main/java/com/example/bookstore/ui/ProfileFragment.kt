@@ -16,9 +16,12 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookstore.databinding.FragmentProfileBinding
+import com.example.bookstore.local.AppDatabase
+import com.example.bookstore.repository.AuthRepository
 import com.example.bookstore.ui.profile.Review
 import com.example.bookstore.ui.profile.ReviewsAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 
 class ProfileFragment : Fragment() {
@@ -75,8 +78,16 @@ class ProfileFragment : Fragment() {
         binding?.backButton?.setOnClickListener {
             it.findNavController().popBackStack()
         }
-        binding?.moreButton?.setOnClickListener {
-            Toast.makeText(context, "More options coming soon", Toast.LENGTH_SHORT).show()
+        binding?.logoutButton?.setOnClickListener { view ->
+            val ctx = requireContext().applicationContext
+            val authRepository = AuthRepository(
+                FirebaseAuth.getInstance(),
+                AppDatabase.getInstance(ctx).userDao()
+            )
+            authRepository.signOut()
+            view.findNavController().navigate(
+                ProfileFragmentDirections.actionProfileToLogin()
+            )
         }
         binding?.avatarImageView?.setOnClickListener { showImageSourceChooser() }
         binding?.editProfileButton?.setOnClickListener {
