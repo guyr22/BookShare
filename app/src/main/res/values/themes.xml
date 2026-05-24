@@ -22,4 +22,14 @@
         <item name="android:textSize">17sp</item>
         <item name="android:textColor">@color/bookshare_text_primary</item>
     </style>
+
+    <style name="ShapeAppearance.BookShare.AvatarCircle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearance.BookShare.BookCover" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
 </resources>
