@@ -61,6 +61,9 @@ dependencies {
 
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.picasso)
 
     // RecyclerView + Picasso (for book list rendering and remote cover loading)
     implementation(libs.androidx.recyclerview)
