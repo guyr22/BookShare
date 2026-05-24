@@ -1,5 +1,7 @@
 package com.example.bookstore.repository
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.bookstore.local.User
 import com.example.bookstore.local.UserDao
 import com.google.firebase.auth.FirebaseAuth
@@ -14,6 +16,16 @@ class AuthRepository(
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
     fun isLoggedIn(): Boolean = auth.currentUser != null
+
+    /**
+     * Observable view of the currently-signed-in user record stored in Room.
+     * Returns a LiveData that emits null when no one is signed in or when the
+     * local cache hasn't been populated yet.
+     */
+    fun observeCurrentUser(): LiveData<User?> {
+        val uid = auth.currentUser?.uid ?: return MutableLiveData(null)
+        return userDao.getUserById(uid)
+    }
 
     suspend fun signInWithEmail(email: String, password: String): AppResult<User> {
         return try {

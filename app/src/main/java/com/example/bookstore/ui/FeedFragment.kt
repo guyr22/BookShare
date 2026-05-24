@@ -10,38 +10,56 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookstore.databinding.FragmentFeedBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.local.Book
 import com.example.bookstore.repository.AuthRepository
+import com.example.bookstore.repository.BookRepository
 import com.example.bookstore.ui.feed.BookAdapter
 import com.example.bookstore.ui.feed.OnBookClickListener
+import com.example.bookstore.viewmodel.AuthViewModel
+import com.example.bookstore.viewmodel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class FeedFragment : Fragment() {
 
     private var binding: FragmentFeedBinding? = null
     private var adapter: BookAdapter? = null
+    private var viewModel: MainViewModel? = null
+    private var authViewModel: AuthViewModel? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
         applyTopInset()
+        setupViewModels()
         setupRecyclerView()
         setupToolbar()
         setupFab()
+        observeBooks()
         return binding?.root
     }
 
     override fun onResume() {
         super.onResume()
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        viewModel?.syncBooks()
     }
 
     override fun onPause() {
         super.onPause()
         (activity as? AppCompatActivity)?.supportActionBar?.show()
+    }
+
+    private fun setupViewModels() {
+        val ctx = requireContext().applicationContext
+        val database = AppDatabase.getInstance(ctx)
+        val bookRepository = BookRepository(database.bookDao())
+        val authRepository = AuthRepository(FirebaseAuth.getInstance(), database.userDao())
+        viewModel = ViewModelProvider(this, MainViewModel.Factory(bookRepository))[MainViewModel::class.java]
+        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository))[AuthViewModel::class.java]
     }
 
     private fun applyTopInset() {
@@ -62,12 +80,7 @@ class FeedFragment : Fragment() {
             )
         }
         binding?.feedLogoutButton?.setOnClickListener { view ->
-            val ctx = requireContext().applicationContext
-            val authRepository = AuthRepository(
-                FirebaseAuth.getInstance(),
-                AppDatabase.getInstance(ctx).userDao()
-            )
-            authRepository.signOut()
+            authViewModel?.signOut()
             view.findNavController().navigate(
                 FeedFragmentDirections.actionFeedToLogin()
             )
@@ -82,8 +95,13 @@ class FeedFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = BookAdapter(mockBooks().toMutableList()).apply {
-            ownerNameProvider = { ownerId -> mockOwnerNames[ownerId] }
+        val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+        adapter = BookAdapter(mutableListOf()).apply {
+            ownerNameProvider = { ownerId ->
+                // Until users/{uid} sync lands, show "You" for own books and a generic
+                // label for others. The real display name comes from the User table.
+                if (ownerId == currentUid) "You" else "Reader"
+            }
             listener = object : OnBookClickListener {
                 override fun onBookClick(book: Book) {
                     Toast.makeText(context, "Tapped: ${book.title}", Toast.LENGTH_SHORT).show()
@@ -99,42 +117,15 @@ class FeedFragment : Fragment() {
         binding?.booksRecyclerView?.adapter = adapter
     }
 
+    private fun observeBooks() {
+        viewModel?.allBooks?.observe(viewLifecycleOwner) { books ->
+            adapter?.submit(books)
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         binding = null
         adapter = null
     }
-
-    private val mockOwnerNames = mapOf(
-        "u_alex" to "Alex Reader",
-        "u_morgan" to "Morgan Quill",
-        "u_sam" to "Sam Pages"
-    )
-
-    private fun mockBooks(): List<Book> = listOf(
-        Book(
-            id = "mock-1",
-            title = "Project Hail Mary",
-            author = "Andy Weir",
-            description = "A lone astronaut wakes up light-years from Earth with no memory and the future of humanity riding on whatever he decides to do next.",
-            coverUrl = "",
-            ownerId = "u_alex"
-        ),
-        Book(
-            id = "mock-2",
-            title = "Klara and the Sun",
-            author = "Kazuo Ishiguro",
-            description = "An Artificial Friend with outstanding observational qualities watches the world from a store window and hopes for a customer to choose her.",
-            coverUrl = "",
-            ownerId = "u_morgan"
-        ),
-        Book(
-            id = "mock-3",
-            title = "The Three-Body Problem",
-            author = "Liu Cixin",
-            description = "A secret military project sends signals into space and an alien civilization on the brink of destruction sets a plan in motion.",
-            coverUrl = "",
-            ownerId = "u_sam"
-        )
-    )
 }
