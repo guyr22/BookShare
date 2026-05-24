@@ -65,6 +65,10 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.picasso)
 
+    // RecyclerView + Picasso (for book list rendering and remote cover loading)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.picasso)
+
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
