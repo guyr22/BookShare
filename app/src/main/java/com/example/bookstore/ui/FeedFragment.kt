@@ -2,16 +2,16 @@ package com.example.bookstore.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
-import androidx.navigation.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.Navigation
+import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentFeedBinding
 import com.example.bookstore.local.Book
 import com.example.bookstore.ui.feed.BookAdapter
@@ -20,73 +20,32 @@ import com.example.bookstore.ui.feed.OnBookClickListener
 class FeedFragment : Fragment() {
 
     private var binding: FragmentFeedBinding? = null
-    private var adapter: BookAdapter? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
-        applyTopInset()
-        setupRecyclerView()
-        setupToolbar()
-        setupFab()
+        setupMenu()
         return binding?.root
     }
 
-    private fun applyTopInset() {
-        val toolbar = binding?.feedToolbar ?: return
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
-            val top = insets.getInsets(
-                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
-            ).top
-            view.updatePadding(top = top)
-            insets
-        }
-    }
+    private fun setupMenu() {
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_feed, menu)
+            }
 
-    override fun onResume() {
-        super.onResume()
-        (activity as? AppCompatActivity)?.supportActionBar?.hide()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        (activity as? AppCompatActivity)?.supportActionBar?.show()
-    }
-
-    private fun setupToolbar() {
-        binding?.feedOverflowButton?.setOnClickListener {
-            Toast.makeText(context, "More options coming soon", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun setupFab() {
-        binding?.createBookFab?.setOnClickListener { view ->
-            val action = FeedFragmentDirections.actionFeedToAddEditBook()
-            view.findNavController().navigate(action)
-        }
-    }
-
-    private fun setupRecyclerView() {
-        adapter = BookAdapter(mockBooks().toMutableList()).apply {
-            ownerNameProvider = { ownerId -> mockOwnerNames[ownerId] }
-            listener = object : OnBookClickListener {
-                override fun onBookClick(book: Book) {
-                    Toast.makeText(context, "Tapped: ${book.title}", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onBookLongClick(book: Book): Boolean {
-                    Toast.makeText(context, "Long-pressed: ${book.title}", Toast.LENGTH_SHORT).show()
-                    return true
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_open_profile -> {
+                        view?.let {
+                            val action = FeedFragmentDirections.actionFeedToProfile()
+                            Navigation.findNavController(it).navigate(action)
+                        }
+                        true
+                    }
+                    else -> false
                 }
             }
-        }
-        binding?.booksRecyclerView?.layoutManager = LinearLayoutManager(context)
-        binding?.booksRecyclerView?.adapter = adapter
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding = null
-        adapter = null
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     private val mockOwnerNames = mapOf(
