@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.example.bookshare.network.toErrorResult
 import retrofit2.HttpException
 
 class BookRepository(
@@ -77,7 +78,7 @@ class BookRepository(
                     else -> return AppResult.Error("Google Books search failed (HTTP ${e.code()}).", e)
                 }
             } catch (e: Exception) {
-                return AppResult.Error(e.message ?: "Google Books search failed.", e)
+                return e.toErrorResult("Google Books search failed.")
             }
         }
         return AppResult.Error("Google Books search failed.", lastError)
@@ -96,7 +97,7 @@ class BookRepository(
             bookDao.insert(finalBook)
             AppResult.Success(finalBook)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Failed to add book.", e)
+            e.toErrorResult("Failed to add book.")
         }
     }
 
@@ -108,7 +109,7 @@ class BookRepository(
             bookDao.update(updated)
             AppResult.Success(updated)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Failed to update book.", e)
+            e.toErrorResult("Failed to update book.")
         }
     }
 
@@ -118,7 +119,7 @@ class BookRepository(
             bookDao.delete(book)
             AppResult.Success(Unit)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Failed to delete book.", e)
+            e.toErrorResult("Failed to delete book.")
         }
     }
 
@@ -167,7 +168,7 @@ class BookRepository(
 
             AppResult.Success(finalBook)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Failed to save book.", e)
+            e.toErrorResult("Failed to save book.")
         }
     }
 
@@ -202,7 +203,7 @@ class BookRepository(
 
             AppResult.Success(newBooks.size)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Sync failed.", e)
+            e.toErrorResult("Sync failed.")
         }
     }
 
