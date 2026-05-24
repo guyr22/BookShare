@@ -3,6 +3,8 @@ package com.example.bookshare.ui
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentFeedBinding
 import com.example.bookshare.local.AppDatabase
+import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.example.bookshare.repository.BookRepository
@@ -42,6 +45,11 @@ class FeedFragment : Fragment() {
     /** ownerId → avatar URL, populated from the synced user cache. */
     private val avatarsById = mutableMapOf<String, String>()
 
+    /** Full unfiltered book list from Room. */
+    private var allBooks: List<Book> = emptyList()
+
+    private val searchQuery get() = binding?.feedSearchEditText?.text?.toString().orEmpty()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
         applyTopInset()
@@ -49,6 +57,7 @@ class FeedFragment : Fragment() {
         setupRecyclerView()
         setupToolbar()
         setupFab()
+        setupSearch()
         observeBooks()
         observeUsers()
         observeCurrentUser()
@@ -119,6 +128,24 @@ class FeedFragment : Fragment() {
         }
     }
 
+    private fun setupSearch() {
+        binding?.feedSearchEditText?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = applySearch()
+        })
+    }
+
+    private fun applySearch() {
+        val query = searchQuery.trim()
+        val filtered = if (query.isEmpty()) {
+            allBooks
+        } else {
+            allBooks.filter { it.title.contains(query, ignoreCase = true) }.take(4)
+        }
+        adapter?.submit(filtered)
+    }
+
     private fun setupRecyclerView() {
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
         adapter = BookAdapter(mutableListOf()).apply {
@@ -138,7 +165,8 @@ class FeedFragment : Fragment() {
 
     private fun observeBooks() {
         viewModel?.allBooks?.observe(viewLifecycleOwner) { books ->
-            adapter?.submit(books)
+            allBooks = books
+            applySearch()
         }
         viewModel?.syncResult?.observe(viewLifecycleOwner) { result ->
             binding?.syncProgressBar?.visibility = View.GONE
@@ -173,7 +201,7 @@ class FeedFragment : Fragment() {
                 avatarsById[it.id] = it.avatarUrl
             }
             // Names may arrive after the books were bound — re-bind to apply them.
-            adapter?.notifyDataSetChanged()
+            applySearch()
         }
     }
 

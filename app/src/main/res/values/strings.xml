@@ -9,6 +9,7 @@
     <string name="feed_profile_description">Open profile</string>
     <string name="feed_logout_description">Log out</string>
     <string name="feed_create_book_description">Add a new book</string>
+    <string name="feed_search_hint">Search by book title…</string>
 
     <string name="addedit_add_title">Add Book</string>
     <string name="addedit_edit_title">Edit Book</string>
