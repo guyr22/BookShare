@@ -35,6 +35,20 @@ class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
     fun getBooksByOwner(ownerId: String): LiveData<List<Book>> =
         bookRepository.getBooksByOwner(ownerId)
 
+    fun getBookById(bookId: String): LiveData<Book?> =
+        bookRepository.getBookById(bookId)
+
+    // ── Google Books search (AddEdit pre-fill) ───────────────────────────────
+
+    private val _searchResult = MutableLiveData<AppResult<Book?>>()
+    val searchResult: LiveData<AppResult<Book?>> = _searchResult
+
+    fun searchGoogleBooks(query: String) {
+        viewModelScope.launch {
+            _searchResult.value = bookRepository.searchGoogleBooks(query)
+        }
+    }
+
     // ── Save (new + edit with optional cover image) ───────────────────────────
 
     fun saveBook(book: Book, coverBitmap: Bitmap? = null) {
