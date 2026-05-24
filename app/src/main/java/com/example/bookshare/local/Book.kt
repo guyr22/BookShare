@@ -12,5 +12,9 @@ data class Book(
     val description: String = "",
     val coverUrl: String = "",
     val ownerId: String,
+    /** The owner's star rating for the book, 0–5 (0 = unrated). */
+    val rating: Int = 0,
+    /** The owner's written review. Shown as the primary text on the feed card. */
+    val review: String = "",
     val lastUpdated: Long = System.currentTimeMillis()
 )

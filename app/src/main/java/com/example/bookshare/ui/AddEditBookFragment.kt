@@ -289,6 +289,8 @@ class AddEditBookFragment : Fragment() {
         binding?.titleEditText?.setText(book.title)
         binding?.authorEditText?.setText(book.author)
         binding?.descriptionEditText?.setText(book.description)
+        binding?.ratingBar?.rating = book.rating.toFloat()
+        binding?.reviewEditText?.setText(book.review)
         loadCoverIntoView(book.coverUrl)
     }
 
@@ -342,13 +344,17 @@ class AddEditBookFragment : Fragment() {
 
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
         val existing = loadedBook
+        val rating = binding?.ratingBar?.rating?.toInt() ?: 0
+        val review = binding?.reviewEditText?.text?.toString()?.trim().orEmpty()
 
         val book = if (existing != null) {
             existing.copy(
                 title = title,
                 author = author,
                 description = description,
-                coverUrl = if (pendingCoverBitmap != null) "" else pendingCoverUrl
+                coverUrl = if (pendingCoverBitmap != null) "" else pendingCoverUrl,
+                rating = rating,
+                review = review
             )
         } else {
             Book(
@@ -357,7 +363,9 @@ class AddEditBookFragment : Fragment() {
                 author = author,
                 description = description,
                 coverUrl = if (pendingCoverBitmap != null) "" else pendingCoverUrl,
-                ownerId = currentUid
+                ownerId = currentUid,
+                rating = rating,
+                review = review
             )
         }
 

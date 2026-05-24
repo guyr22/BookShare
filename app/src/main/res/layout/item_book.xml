@@ -99,32 +99,66 @@
             app:layout_constraintTop_toBottomOf="@id/titleTextView"
             tools:text="Andy Weir" />
 
+        <RatingBar
+            android:id="@+id/ratingBar"
+            style="?android:attr/ratingBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:isIndicator="true"
+            android:numStars="5"
+            android:progressBackgroundTint="@color/bookshare_rating_empty"
+            android:progressTint="@color/bookshare_rating_gold"
+            android:secondaryProgressTint="@color/bookshare_rating_gold"
+            android:stepSize="0.5"
+            app:layout_constraintStart_toStartOf="@id/titleTextView"
+            app:layout_constraintTop_toBottomOf="@id/authorTextView" />
+
         <TextView
-            android:id="@+id/descriptionTextView"
+            android:id="@+id/reviewTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:ellipsize="end"
             android:lineSpacingMultiplier="1.35"
-            android:maxLines="2"
+            android:maxLines="3"
             android:textColor="@color/bookshare_text_body"
             android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="@id/titleTextView"
             app:layout_constraintStart_toStartOf="@id/titleTextView"
-            app:layout_constraintTop_toBottomOf="@id/authorTextView"
-            tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed eiusmod." />
+            app:layout_constraintTop_toBottomOf="@id/ratingBar"
+            tools:text="Absolutely gripping — I could not put it down. A must-read for sci-fi fans." />
 
         <TextView
-            android:id="@+id/readMoreTextView"
+            android:id="@+id/reviewToggleTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:background="?attr/selectableItemBackground"
             android:fontFamily="sans-serif-medium"
+            android:paddingVertical="2dp"
             android:text="@string/feed_card_read_more"
             android:textColor="@color/bookshare_blue"
             android:textSize="11sp"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="@id/titleTextView"
-            app:layout_constraintTop_toBottomOf="@id/descriptionTextView" />
+            app:layout_constraintTop_toBottomOf="@id/reviewTextView"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/viewDescriptionTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="?attr/selectableItemBackground"
+            android:fontFamily="sans-serif-medium"
+            android:paddingVertical="2dp"
+            android:text="@string/feed_card_view_description"
+            android:textColor="@color/bookshare_blue"
+            android:textSize="11sp"
+            app:layout_constraintStart_toStartOf="@id/titleTextView"
+            app:layout_constraintTop_toBottomOf="@id/reviewToggleTextView"
+            app:layout_goneMarginTop="4dp" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

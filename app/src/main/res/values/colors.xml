@@ -20,4 +20,6 @@
     <color name="bookshare_book_cover_red">#D94D40</color>
     <color name="bookshare_book_cover_placeholder">#F2C733</color>
     <color name="bookshare_card_border">#EBEDF0</color>
+    <color name="bookshare_rating_gold">#FFB300</color>
+    <color name="bookshare_rating_empty">#D4D9E0</color>
 </resources>
