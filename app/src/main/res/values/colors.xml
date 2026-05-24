@@ -18,4 +18,6 @@
     <color name="bookshare_avatar_placeholder">#C5D4E4</color>
     <color name="bookshare_book_cover_dark">#1A1A1F</color>
     <color name="bookshare_book_cover_red">#D94D40</color>
+    <color name="bookshare_book_cover_placeholder">#F2C733</color>
+    <color name="bookshare_card_border">#EBEDF0</color>
 </resources>
