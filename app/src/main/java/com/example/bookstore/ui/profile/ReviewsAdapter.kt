@@ -4,20 +4,34 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookstore.databinding.ItemReviewCardBinding
+import com.example.bookstore.local.Book
 
 class ReviewsAdapter(
-    var reviews: MutableList<Review>?
+    var items: MutableList<Book>?
 ) : RecyclerView.Adapter<ReviewViewHolder>() {
 
-    override fun getItemCount(): Int = reviews?.size ?: 0
+    var listener: OnReviewClickListener? = null
+
+    /** Author name shown in every card header. Profile is "my reviews", so this is the current user. */
+    var displayName: String? = null
+
+    override fun getItemCount(): Int = items?.size ?: 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        val binding = ItemReviewCardBinding.inflate(inflater, parent, false)
-        return ReviewViewHolder(binding)
+        val binding = ItemReviewCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ReviewViewHolder(binding, listener)
     }
 
     override fun onBindViewHolder(holder: ReviewViewHolder, position: Int) {
-        reviews?.let { holder.bind(it[position]) }
+        items?.get(position)?.let { holder.bind(it, displayName) }
     }
+
+    fun submit(newItems: List<Book>) {
+        items = newItems.toMutableList()
+        notifyDataSetChanged()
+    }
+}
+
+interface OnReviewClickListener {
+    fun onReviewClick(book: Book)
 }
