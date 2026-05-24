@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import com.example.bookstore.local.Book
 import com.example.bookstore.local.BookDao
+import com.example.bookstore.network.NetworkClient
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -23,6 +24,37 @@ class BookRepository(
 
     fun getBooksByOwner(ownerId: String): LiveData<List<Book>> =
         bookDao.getBooksByOwner(ownerId)
+
+    fun getBookById(bookId: String): LiveData<Book?> =
+        bookDao.getBookById(bookId)
+
+    // ── Google Books search (pre-fill helper for the AddEdit screen) ─────────
+
+    /**
+     * Returns the top Google Books match for [query] mapped into a [Book] shell
+     * (no id / ownerId — those are filled in by the caller before saving).
+     * Returns `Success(null)` when the API returns zero results.
+     */
+    suspend fun searchGoogleBooks(query: String): AppResult<Book?> {
+        return try {
+            val response = NetworkClient.googleBooksApi.searchByTitle(query, maxResults = 1)
+            val item = response.items.firstOrNull()
+                ?: return AppResult.Success(null)
+            val info = item.volumeInfo
+            AppResult.Success(
+                Book(
+                    id = "",
+                    title = info.title,
+                    author = info.authors.joinToString(", "),
+                    description = info.description,
+                    coverUrl = info.imageLinks?.thumbnail.orEmpty(),
+                    ownerId = ""
+                )
+            )
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Google Books search failed.", e)
+        }
+    }
 
     // ── Firebase writes (write-through: Firebase first, then Room) ───────────
 
