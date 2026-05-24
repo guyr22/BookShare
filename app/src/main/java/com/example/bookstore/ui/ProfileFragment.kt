@@ -15,6 +15,7 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bookstore.R
 import com.example.bookstore.databinding.FragmentProfileBinding
 import com.example.bookstore.local.AppDatabase
 import com.example.bookstore.repository.AuthRepository
@@ -98,11 +99,26 @@ class ProfileFragment : Fragment() {
 
     private fun setupReviewsList() {
         binding?.reviewsRecyclerView?.layoutManager = LinearLayoutManager(context)
-        val reviews = mutableListOf<Review>()
+        val reviews = mockReviews().toMutableList()
         adapter = ReviewsAdapter(reviews)
         binding?.reviewsRecyclerView?.adapter = adapter
         binding?.emptyStateTextView?.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
     }
+
+    private fun mockReviews(): List<Review> = listOf(
+        Review(
+            authorName = "Alex Reader",
+            bookTitle = "Project Hail Mary",
+            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+            coverBackgroundRes = R.drawable.bg_book_cover_dark
+        ),
+        Review(
+            authorName = "Alex Reader",
+            bookTitle = "Klara and the Sun",
+            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+            coverBackgroundRes = R.drawable.bg_book_cover_red
+        )
+    )
 
     private fun showImageSourceChooser() {
         val options = arrayOf("Take a photo", "Choose from gallery")

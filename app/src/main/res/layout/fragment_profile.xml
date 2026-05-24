@@ -106,9 +106,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:fontFamily="sans-serif"
-                android:text="Your Name"
+                android:text="Alex Reader"
                 android:textColor="@color/bookshare_text_strong"
                 android:textSize="22sp"
                 android:textStyle="bold" />
