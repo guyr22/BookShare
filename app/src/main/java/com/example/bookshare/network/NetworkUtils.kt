@@ -1,5 +1,8 @@
 package com.example.bookshare.network
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.example.bookshare.repository.AppResult
 import java.io.IOException
 
@@ -26,3 +29,9 @@ fun isNetworkError(e: Exception): Boolean {
 fun Exception.toErrorResult(fallback: String): AppResult.Error =
     if (isNetworkError(this)) AppResult.Error(NO_INTERNET_MESSAGE, this)
     else AppResult.Error(message ?: fallback, this)
+
+fun Context.isNetworkAvailable(): Boolean {
+    val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+    return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
