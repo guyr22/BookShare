@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
@@ -29,6 +30,9 @@ class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
             _syncResult.value = bookRepository.syncFromFirebase()
         }
     }
+
+    fun startRealtimeSync(scope: CoroutineScope) = bookRepository.startRealtimeSync(scope)
+    fun stopRealtimeSync() = bookRepository.stopRealtimeSync()
 
     // ── Per-owner query (Profile screen) ─────────────────────────────────────
 
