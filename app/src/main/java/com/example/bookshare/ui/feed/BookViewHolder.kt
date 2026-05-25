@@ -37,6 +37,7 @@ class BookViewHolder(
         } else {
             binding.coverImageView.setImageDrawable(null)
         }
+
     }
 
     /**

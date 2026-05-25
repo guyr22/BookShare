@@ -25,6 +25,7 @@
     <string name="addedit_delete_failed">Couldn\'t delete: %s</string>
     <string name="addedit_search_no_results">No books found for that query.</string>
     <string name="addedit_search_failed">Search failed: %s</string>
+    <string name="addedit_cover_source_title">Book cover photo</string>
 
     <string name="profile_edit_title">Edit Profile</string>
     <string name="profile_edit_name_hint">Display name</string>
