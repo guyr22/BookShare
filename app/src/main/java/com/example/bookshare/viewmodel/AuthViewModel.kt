@@ -9,30 +9,30 @@ import androidx.lifecycle.viewModelScope
 import com.example.bookshare.model.User
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
+import com.example.bookshare.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class AuthViewModel(
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _authResult = MutableLiveData<AppResult<User>>()
     val authResult: LiveData<AppResult<User>> = _authResult
 
     val isLoggedIn: Boolean get() = authRepository.isLoggedIn()
 
-    /** Local Room record of the signed-in user; null until login finishes or if signed out. */
-    val currentUser: LiveData<User?> = authRepository.observeCurrentUser()
+    val currentUser: LiveData<User?> = userRepository.observeCurrentUser()
 
-    /** Every cached user — the Feed maps ownerId → display name from this. */
-    val users: LiveData<List<User>> = authRepository.getAllUsers()
+    val users: LiveData<List<User>> = userRepository.getAllUsers()
 
-    /** Delta-fetch all users into Room so the Feed can resolve owner names. */
     fun syncUsers() {
         viewModelScope.launch {
-            authRepository.syncUsersFromFirebase()
+            userRepository.syncUsersFromFirebase()
         }
     }
 
-    /** One-shot accessor for the FirebaseAuth user (e.g. for UID before the Room write lands). */
     val firebaseUser: FirebaseUser? get() = authRepository.getCurrentUser()
 
     fun signIn(email: String, password: String) {
@@ -52,21 +52,22 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _updateProfileResult = MutableLiveData<AppResult<User>?>()
     val updateProfileResult: LiveData<AppResult<User>?> = _updateProfileResult
 
-    /** Updates the signed-in user's display name and (optionally) avatar photo. */
     fun updateProfile(name: String, avatarBitmap: Bitmap?) {
         viewModelScope.launch {
-            _updateProfileResult.value = authRepository.updateProfile(name, avatarBitmap)
+            _updateProfileResult.value = userRepository.updateProfile(name, avatarBitmap)
         }
     }
 
-    /** Clears the one-shot result so it isn't re-delivered after a config change. */
     fun clearUpdateProfileResult() {
         _updateProfileResult.value = null
     }
 
-    class Factory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val authRepository: AuthRepository,
+        private val userRepository: UserRepository
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            AuthViewModel(authRepository) as T
+            AuthViewModel(authRepository, userRepository) as T
     }
 }

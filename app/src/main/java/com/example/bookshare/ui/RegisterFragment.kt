@@ -21,6 +21,7 @@ import com.example.bookshare.databinding.FragmentRegisterBinding
 import com.example.bookshare.local.AppDatabase
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
+import com.example.bookshare.repository.UserRepository
 import com.example.bookshare.viewmodel.AuthViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -70,11 +71,11 @@ class RegisterFragment : Fragment() {
 
     private fun setupViewModel() {
         val ctx = requireContext().applicationContext
-        val authRepository = AuthRepository(
-            FirebaseAuth.getInstance(),
-            AppDatabase.getInstance(ctx).userDao()
-        )
-        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository))[AuthViewModel::class.java]
+        val auth = FirebaseAuth.getInstance()
+        val userDao = AppDatabase.getInstance(ctx).userDao()
+        val userRepository = UserRepository(auth, userDao)
+        val authRepository = AuthRepository(auth, userRepository)
+        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository, userRepository))[AuthViewModel::class.java]
     }
 
     private fun setupView() {

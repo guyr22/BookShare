@@ -26,6 +26,7 @@ import com.example.bookshare.local.AppDatabase
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.example.bookshare.repository.BookRepository
+import com.example.bookshare.repository.UserRepository
 import com.example.bookshare.ui.feed.BookAdapter
 import com.example.bookshare.viewmodel.AuthViewModel
 import com.example.bookshare.viewmodel.MainViewModel
@@ -98,9 +99,11 @@ class FeedFragment : Fragment() {
         val ctx = requireContext().applicationContext
         val database = AppDatabase.getInstance(ctx)
         val bookRepository = BookRepository(database.bookDao())
-        val authRepository = AuthRepository(FirebaseAuth.getInstance(), database.userDao())
+        val auth = FirebaseAuth.getInstance()
+        val userRepository = UserRepository(auth, database.userDao())
+        val authRepository = AuthRepository(auth, userRepository)
         viewModel = ViewModelProvider(this, MainViewModel.Factory(bookRepository))[MainViewModel::class.java]
-        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository))[AuthViewModel::class.java]
+        authViewModel = ViewModelProvider(this, AuthViewModel.Factory(authRepository, userRepository))[AuthViewModel::class.java]
     }
 
     private fun applyTopInset() {

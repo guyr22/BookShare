@@ -11,8 +11,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.example.bookshare.databinding.ActivityMainBinding
-import com.example.bookshare.local.AppDatabase
-import com.example.bookshare.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -72,11 +70,7 @@ class MainActivity : AppCompatActivity() {
      * ActionBar's "up" arrow logic uses the correct start destination.
      */
     private fun applyAutoLogin(controller: NavController) {
-        val authRepository = AuthRepository(
-            FirebaseAuth.getInstance(),
-            AppDatabase.getInstance(this).userDao()
-        )
-        if (!authRepository.isLoggedIn()) return
+        if (FirebaseAuth.getInstance().currentUser == null) return
 
         val graph = controller.navInflater.inflate(R.navigation.nav_graph)
         graph.setStartDestination(R.id.feedFragment)
