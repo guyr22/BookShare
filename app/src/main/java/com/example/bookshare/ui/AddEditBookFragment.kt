@@ -36,6 +36,8 @@ import com.example.bookshare.local.AppDatabase
 import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
+import com.example.bookshare.network.NO_INTERNET_MESSAGE
+import com.example.bookshare.network.isNetworkAvailable
 import com.example.bookshare.ui.search.BookSearchResultAdapter
 import com.example.bookshare.viewmodel.MainViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -331,6 +333,11 @@ class AddEditBookFragment : Fragment() {
     }
 
     private fun onSaveClicked() {
+        if (!requireContext().isNetworkAvailable()) {
+            Toast.makeText(context, NO_INTERNET_MESSAGE, Toast.LENGTH_LONG).show()
+            return
+        }
+
         val title = binding?.titleEditText?.text?.toString()?.trim().orEmpty()
         val author = binding?.authorEditText?.text?.toString()?.trim().orEmpty()
         val description = binding?.descriptionEditText?.text?.toString()?.trim().orEmpty()
@@ -366,6 +373,10 @@ class AddEditBookFragment : Fragment() {
     }
 
     private fun onDeleteClicked() {
+        if (!requireContext().isNetworkAvailable()) {
+            Toast.makeText(context, NO_INTERNET_MESSAGE, Toast.LENGTH_LONG).show()
+            return
+        }
         val book = loadedBook ?: return
         binding?.saveProgressOverlay?.visibility = View.VISIBLE
         viewModel?.deleteBook(book)
