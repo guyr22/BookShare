@@ -236,6 +236,44 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/addedit_rating_label"
+                android:textColor="@color/bookshare_text_body"
+                android:textSize="13sp" />
+
+            <RatingBar
+                android:id="@+id/ratingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:numStars="5"
+                android:progressBackgroundTint="@color/bookshare_rating_empty"
+                android:progressTint="@color/bookshare_rating_gold"
+                android:secondaryProgressTint="@color/bookshare_rating_gold"
+                android:stepSize="1" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/reviewInputLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:hint="@string/addedit_review_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/reviewEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="140dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:textColor="@color/bookshare_text_strong"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/deleteButton"
                 style="@style/Widget.Material3.Button.TextButton"

@@ -65,35 +65,53 @@
         app:layout_constraintStart_toEndOf="@id/bookCover"
         app:layout_constraintTop_toTopOf="@id/bookCover" />
 
-    <TextView
-        android:id="@+id/bookDescription"
-        android:layout_width="0dp"
+    <RatingBar
+        android:id="@+id/ratingBar"
+        style="?android:attr/ratingBarStyleSmall"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="4dp"
-        android:fontFamily="sans-serif"
-        android:lineSpacingMultiplier="1.4"
-        android:maxLines="2"
-        android:ellipsize="end"
-        android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor."
-        android:textColor="@color/bookshare_text_body"
-        android:textSize="11sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="5dp"
+        android:isIndicator="true"
+        android:numStars="5"
+        android:progressBackgroundTint="@color/bookshare_rating_empty"
+        android:progressTint="@color/bookshare_rating_gold"
+        android:secondaryProgressTint="@color/bookshare_rating_gold"
+        android:stepSize="0.5"
         app:layout_constraintStart_toEndOf="@id/bookCover"
         app:layout_constraintTop_toBottomOf="@id/bookTitle" />
 
     <TextView
-        android:id="@+id/readMore"
+        android:id="@+id/reviewText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:lineSpacingMultiplier="1.4"
+        android:maxLines="2"
+        android:text="Quietly powerful and beautifully written. It stayed with me for days."
+        android:textColor="@color/bookshare_text_body"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bookCover"
+        app:layout_constraintTop_toBottomOf="@id/ratingBar" />
+
+    <TextView
+        android:id="@+id/viewDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:layout_marginTop="6dp"
+        android:background="?attr/selectableItemBackground"
         android:fontFamily="sans-serif-medium"
-        android:text="Read More"
+        android:paddingVertical="2dp"
+        android:text="@string/feed_card_view_description"
         android:textColor="@color/bookshare_blue"
         android:textSize="11sp"
         app:layout_constraintStart_toEndOf="@id/bookCover"
-        app:layout_constraintTop_toBottomOf="@id/bookDescription" />
+        app:layout_constraintTop_toBottomOf="@id/reviewText" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

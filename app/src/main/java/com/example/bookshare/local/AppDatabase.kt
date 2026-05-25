@@ -25,7 +25,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [User::class, Book::class],
-    version = 2,
+    version = 3,
     exportSchema = true          // keeps a JSON schema history in app/schemas/ — good for code review
 )
 abstract class AppDatabase : RoomDatabase() {
