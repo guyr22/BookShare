@@ -9,25 +9,10 @@ import com.example.bookshare.local.Book
 import com.squareup.picasso.Picasso
 
 class BookViewHolder(
-    private val binding: ItemBookBinding,
-    private val listener: OnBookClickListener?
+    private val binding: ItemBookBinding
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    private var currentBook: Book? = null
-
-    init {
-        binding.bookCard.setOnClickListener {
-            currentBook?.let { listener?.onBookClick(it) }
-        }
-        binding.bookCard.setOnLongClickListener {
-            val book = currentBook ?: return@setOnLongClickListener false
-            listener?.onBookLongClick(book) ?: false
-        }
-    }
-
     fun bind(book: Book, ownerName: String?) {
-        currentBook = book
-
         binding.titleTextView.text = book.title
         binding.authorTextView.text = book.author
         binding.ownerNameTextView.text = ownerName ?: book.ownerId
