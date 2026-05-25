@@ -45,6 +45,13 @@ interface UserDao {
     fun getUserById(userId: String): LiveData<User?>
 
     /**
+     * Observe every cached user. The Feed uses this to map ownerId → display name
+     * so other users' posts show their real name instead of a placeholder.
+     */
+    @Query("SELECT * FROM users")
+    fun getAll(): LiveData<List<User>>
+
+    /**
      * One-shot (non-observable) fetch of a user — useful inside suspend functions
      * that need the value immediately (e.g. before pushing to Firebase).
      */

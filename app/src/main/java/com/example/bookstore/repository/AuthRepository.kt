@@ -9,6 +9,7 @@ import com.example.bookstore.local.UserDao
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
@@ -40,13 +41,19 @@ class AuthRepository(
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user ?: return AppResult.Error("Sign-in succeeded but no user was returned.")
+            val uid = firebaseUser.uid
 
-            val user = User(
-                id = firebaseUser.uid,
+            // Prefer the existing remote profile (real name + avatar from registration
+            // or a previous edit) over the sparse FirebaseAuth fields. If there is no
+            // remote record yet (legacy account), create one from what we have.
+            val remote = fetchRemoteUser(uid)
+            val user = remote ?: User(
+                id = uid,
                 email = firebaseUser.email ?: email,
-                name = firebaseUser.displayName ?: ""
+                name = firebaseUser.displayName.orEmpty()
             )
             userDao.insert(user)
+            if (remote == null) pushUserToFirebase(user)
 
             AppResult.Success(user)
         } catch (e: Exception) {
@@ -69,6 +76,7 @@ class AuthRepository(
                 name = name
             )
             userDao.insert(user)
+            pushUserToFirebase(user)
 
             AppResult.Success(user)
         } catch (e: Exception) {
@@ -128,6 +136,66 @@ class AuthRepository(
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Profile update failed.", e)
         }
+    }
+
+    // ── Multi-user persistence (so the Feed can show real names) ─────────────
+
+    /** Observe every cached user — Feed maps ownerId → display name from this. */
+    fun getAllUsers(): LiveData<List<User>> = userDao.getAll()
+
+    /**
+     * Delta-fetch every user whose lastUpdated is newer than the highest timestamp
+     * already in Room, then cache them. Mirrors BookRepository.syncFromFirebase.
+     * Returns the number of new/updated records written. Call on app/Feed start.
+     */
+    suspend fun syncUsersFromFirebase(): AppResult<Int> {
+        return try {
+            val since = userDao.getMaxLastUpdated() ?: 0L
+            val snapshot = usersRef
+                .orderByChild("lastUpdated")
+                .startAt((since + 1).toDouble())   // +1 excludes records we already have
+                .get()
+                .await()
+
+            val newUsers = snapshot.children.mapNotNull { it.toUser() }
+            if (newUsers.isNotEmpty()) userDao.insertAll(newUsers)
+
+            AppResult.Success(newUsers.size)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "User sync failed.", e)
+        }
+    }
+
+    /** One-shot read of a single remote user record (null if absent or on error). */
+    private suspend fun fetchRemoteUser(uid: String): User? {
+        return try {
+            usersRef.child(uid).get().await().toUser()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Best-effort write of users/{uid}; never fails the surrounding auth flow. */
+    private suspend fun pushUserToFirebase(user: User) {
+        try {
+            usersRef.child(user.id).setValue(user.toFirebaseMap()).await()
+        } catch (e: Exception) {
+            // Offline or transient — the next profile edit / sync reconciles it.
+        }
+    }
+
+    private fun DataSnapshot.toUser(): User? {
+        val uid = child("id").getValue(String::class.java)?.takeIf { it.isNotBlank() }
+            ?: key
+            ?: return null
+        return User(
+            id = uid,
+            name = child("name").getValue(String::class.java).orEmpty(),
+            email = child("email").getValue(String::class.java).orEmpty(),
+            avatarUrl = child("avatarUrl").getValue(String::class.java).orEmpty(),
+            lastUpdated = child("lastUpdated").getValue(Long::class.java)
+                ?: System.currentTimeMillis()
+        )
     }
 
     private fun User.toFirebaseMap(): Map<String, Any> = mapOf(

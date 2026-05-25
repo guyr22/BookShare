@@ -22,6 +22,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     /** Local Room record of the signed-in user; null until login finishes or if signed out. */
     val currentUser: LiveData<User?> = authRepository.observeCurrentUser()
 
+    /** Every cached user — the Feed maps ownerId → display name from this. */
+    val users: LiveData<List<User>> = authRepository.getAllUsers()
+
+    /** Delta-fetch all users into Room so the Feed can resolve owner names. */
+    fun syncUsers() {
+        viewModelScope.launch {
+            authRepository.syncUsersFromFirebase()
+        }
+    }
+
     /** One-shot accessor for the FirebaseAuth user (e.g. for UID before the Room write lands). */
     val firebaseUser: FirebaseUser? get() = authRepository.getCurrentUser()
 
