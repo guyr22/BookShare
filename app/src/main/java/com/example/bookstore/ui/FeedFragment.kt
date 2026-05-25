@@ -32,6 +32,9 @@ class FeedFragment : Fragment() {
     private var viewModel: MainViewModel? = null
     private var authViewModel: AuthViewModel? = null
 
+    /** ownerId → display name, populated from the synced user cache. */
+    private val usersById = mutableMapOf<String, String>()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
         applyTopInset()
@@ -40,6 +43,7 @@ class FeedFragment : Fragment() {
         setupToolbar()
         setupFab()
         observeBooks()
+        observeUsers()
         return binding?.root
     }
 
@@ -48,6 +52,7 @@ class FeedFragment : Fragment() {
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
         binding?.syncProgressBar?.visibility = View.VISIBLE
         viewModel?.syncBooks()
+        authViewModel?.syncUsers()
     }
 
     override fun onPause() {
@@ -100,9 +105,12 @@ class FeedFragment : Fragment() {
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
         adapter = BookAdapter(mutableListOf()).apply {
             ownerNameProvider = { ownerId ->
-                // Until users/{uid} sync lands, show "You" for own books and a generic
-                // label for others. The real display name comes from the User table.
-                if (ownerId == currentUid) "You" else "Reader"
+                // Own posts read "You"; everyone else shows their synced display name,
+                // falling back to "Reader" until their user record arrives.
+                when {
+                    ownerId == currentUid -> "You"
+                    else -> usersById[ownerId]?.takeIf { it.isNotBlank() } ?: "Reader"
+                }
             }
             listener = object : OnBookClickListener {
                 override fun onBookClick(book: Book) {
@@ -128,6 +136,15 @@ class FeedFragment : Fragment() {
             if (result is AppResult.Error) {
                 Toast.makeText(context, "Sync failed: ${result.message}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun observeUsers() {
+        authViewModel?.users?.observe(viewLifecycleOwner) { users ->
+            usersById.clear()
+            users.forEach { usersById[it.id] = it.name }
+            // Names may arrive after the books were bound — re-bind to apply them.
+            adapter?.notifyDataSetChanged()
         }
     }
 
