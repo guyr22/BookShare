@@ -147,12 +147,13 @@ class AddEditBookFragment : Fragment() {
             }
         }
 
-        // Google Books search result → prefill fields.
+        // Google Books search result → prefill fields from first match.
+        // TODO: replace firstOrNull() with a picker dialog once search-results UI is built.
         vm.searchResult.observe(viewLifecycleOwner) { result ->
             binding?.searchProgress?.visibility = View.GONE
             when (result) {
                 is AppResult.Success -> {
-                    val book = result.data
+                    val book = result.data.firstOrNull()
                     if (book == null) {
                         Toast.makeText(context, R.string.addedit_search_no_results, Toast.LENGTH_SHORT).show()
                     } else {
