@@ -2,6 +2,7 @@ package com.example.bookshare.viewmodel
 
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -14,14 +15,52 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
 
-    // All books from Room — UI observes this and reacts to every local change.
-    val allBooks: LiveData<List<Book>> = bookRepository.getAllBooks()
+    private var allBooksCache: List<Book> = emptyList()
+    private var displayCount = PAGE_SIZE
+    private var currentSearchQuery: String = ""
+
+    // Paged + searchable window over the full Room list. The Fragment observes this.
+    val feedBooks = MediatorLiveData<List<Book>>().also { ld ->
+        ld.addSource(bookRepository.getAllBooks()) { books ->
+            allBooksCache = books
+            updateFeed()
+        }
+    }
+
+    private val _hasMore = MutableLiveData(false)
+    val hasMore: LiveData<Boolean> = _hasMore
 
     private val _syncResult = MutableLiveData<AppResult<Int>>()
     val syncResult: LiveData<AppResult<Int>> = _syncResult
 
     private val _bookOperation = MutableLiveData<AppResult<*>>()
     val bookOperation: LiveData<AppResult<*>> = _bookOperation
+
+    // ── Feed search & paging ──────────────────────────────────────────────────
+
+    fun setSearchQuery(query: String) {
+        currentSearchQuery = query.trim()
+        displayCount = PAGE_SIZE
+        updateFeed()
+    }
+
+    fun loadMoreBooks() {
+        if (currentSearchQuery.isNotBlank()) return
+        displayCount += PAGE_SIZE
+        updateFeed()
+    }
+
+    private fun updateFeed() {
+        if (currentSearchQuery.isBlank()) {
+            feedBooks.value = allBooksCache.take(displayCount)
+            _hasMore.value = allBooksCache.size > displayCount
+        } else {
+            feedBooks.value = allBooksCache
+                .filter { it.title.contains(currentSearchQuery, ignoreCase = true) }
+                .take(SEARCH_MAX_RESULTS)
+            _hasMore.value = false
+        }
+    }
 
     // ── Sync ─────────────────────────────────────────────────────────────────
 
@@ -85,5 +124,10 @@ class MainViewModel(private val bookRepository: BookRepository) : ViewModel() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             MainViewModel(bookRepository) as T
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 5
+        private const val SEARCH_MAX_RESULTS = 4
     }
 }

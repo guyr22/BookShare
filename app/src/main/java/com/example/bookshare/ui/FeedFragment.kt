@@ -19,10 +19,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentFeedBinding
 import com.example.bookshare.local.AppDatabase
-import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.example.bookshare.repository.BookRepository
@@ -45,10 +45,17 @@ class FeedFragment : Fragment() {
     /** ownerId → avatar URL, populated from the synced user cache. */
     private val avatarsById = mutableMapOf<String, String>()
 
-    /** Full unfiltered book list from Room. */
-    private var allBooks: List<Book> = emptyList()
-
-    private val searchQuery get() = binding?.feedSearchEditText?.text?.toString().orEmpty()
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy <= 0) return
+            val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
+            val lastVisible = lm.findLastVisibleItemPosition()
+            val total = lm.itemCount
+            if (total > 0 && lastVisible >= total - LOAD_MORE_THRESHOLD) {
+                viewModel?.loadMoreBooks()
+            }
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentFeedBinding.inflate(layoutInflater, container, false)
@@ -132,26 +139,16 @@ class FeedFragment : Fragment() {
         binding?.feedSearchEditText?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable?) = applySearch()
+            override fun afterTextChanged(s: Editable?) {
+                viewModel?.setSearchQuery(s?.toString().orEmpty())
+            }
         })
-    }
-
-    private fun applySearch() {
-        val query = searchQuery.trim()
-        val filtered = if (query.isEmpty()) {
-            allBooks
-        } else {
-            allBooks.filter { it.title.contains(query, ignoreCase = true) }.take(4)
-        }
-        adapter?.submit(filtered)
     }
 
     private fun setupRecyclerView() {
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
         adapter = BookAdapter(mutableListOf()).apply {
             ownerNameProvider = { ownerId ->
-                // Own posts read "You"; everyone else shows their synced display name,
-                // falling back to "Reader" until their user record arrives.
                 when {
                     ownerId == currentUid -> "You"
                     else -> usersById[ownerId]?.takeIf { it.isNotBlank() } ?: "Reader"
@@ -161,12 +158,12 @@ class FeedFragment : Fragment() {
         }
         binding?.booksRecyclerView?.layoutManager = LinearLayoutManager(context)
         binding?.booksRecyclerView?.adapter = adapter
+        binding?.booksRecyclerView?.addOnScrollListener(scrollListener)
     }
 
     private fun observeBooks() {
-        viewModel?.allBooks?.observe(viewLifecycleOwner) { books ->
-            allBooks = books
-            applySearch()
+        viewModel?.feedBooks?.observe(viewLifecycleOwner) { books ->
+            adapter?.submit(books)
         }
         viewModel?.syncResult?.observe(viewLifecycleOwner) { result ->
             binding?.syncProgressBar?.visibility = View.GONE
@@ -200,14 +197,19 @@ class FeedFragment : Fragment() {
                 usersById[it.id] = it.name
                 avatarsById[it.id] = it.avatarUrl
             }
-            // Names may arrive after the books were bound — re-bind to apply them.
-            applySearch()
+            // Names may arrive after books were bound — rebind to apply them.
+            adapter?.notifyDataSetChanged()
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding?.booksRecyclerView?.removeOnScrollListener(scrollListener)
         binding = null
         adapter = null
+    }
+
+    companion object {
+        private const val LOAD_MORE_THRESHOLD = 2
     }
 }
