@@ -10,14 +10,12 @@ class BookAdapter(
     var items: MutableList<Book>?
 ) : RecyclerView.Adapter<BookViewHolder>() {
 
-    var listener: OnBookClickListener? = null
-
     /** Optional owner-name lookup. Adapter shows ownerId if a name isn't provided. */
     var ownerNameProvider: ((ownerId: String) -> String?)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
         val binding = ItemBookBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return BookViewHolder(binding, listener)
+        return BookViewHolder(binding)
     }
 
     override fun getItemCount(): Int = items?.size ?: 0
@@ -31,9 +29,4 @@ class BookAdapter(
         items = newItems.toMutableList()
         notifyDataSetChanged()
     }
-}
-
-interface OnBookClickListener {
-    fun onBookClick(book: Book)
-    fun onBookLongClick(book: Book): Boolean = false
 }
