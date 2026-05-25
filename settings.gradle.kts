@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BookStore"
+rootProject.name = "BookShare"
 include(":app")
