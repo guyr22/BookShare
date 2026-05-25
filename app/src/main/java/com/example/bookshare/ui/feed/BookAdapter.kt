@@ -13,6 +13,9 @@ class BookAdapter(
     /** Optional owner-name lookup. Adapter shows ownerId if a name isn't provided. */
     var ownerNameProvider: ((ownerId: String) -> String?)? = null
 
+    /** Optional owner-avatar lookup. */
+    var ownerAvatarProvider: ((ownerId: String) -> String?)? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
         val binding = ItemBookBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return BookViewHolder(binding)
@@ -22,7 +25,7 @@ class BookAdapter(
 
     override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
         val book = items?.get(position) ?: return
-        holder.bind(book, ownerNameProvider?.invoke(book.ownerId))
+        holder.bind(book, ownerNameProvider?.invoke(book.ownerId), ownerAvatarProvider?.invoke(book.ownerId))
     }
 
     fun submit(newItems: List<Book>) {

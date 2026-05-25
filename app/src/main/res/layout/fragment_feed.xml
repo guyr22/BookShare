@@ -19,16 +19,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/feedProfileButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@color/bookshare_avatar_placeholder"
             android:clickable="true"
             android:contentDescription="@string/feed_profile_description"
             android:focusable="true"
+            android:scaleType="centerCrop"
             android:src="@drawable/ic_account"
-            app:tint="@color/white" />
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.BookShare.Circle" />
 
         <TextView
             android:id="@+id/feedTitleTextView"

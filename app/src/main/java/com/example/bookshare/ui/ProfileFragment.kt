@@ -51,6 +51,9 @@ class ProfileFragment : Fragment() {
     /** Avatar chosen but not yet persisted — uploaded only when the user taps Save. */
     private var pendingAvatarBitmap: Bitmap? = null
 
+    /** Live reference to the avatar ImageView inside the edit-profile dialog, if open. */
+    private var dialogAvatarView: ImageView? = null
+
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -81,6 +84,8 @@ class ProfileFragment : Fragment() {
         pendingAvatarBitmap = bitmap
         binding?.avatarImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
         binding?.avatarImageView?.setImageBitmap(bitmap)
+        dialogAvatarView?.scaleType = ImageView.ScaleType.CENTER_CROP
+        dialogAvatarView?.setImageBitmap(bitmap)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -150,27 +155,36 @@ class ProfileFragment : Fragment() {
         val ctx = requireContext()
         val currentName = binding?.nameTextView?.text?.toString().orEmpty()
 
-        val input = EditText(ctx).apply {
-            hint = getString(R.string.profile_edit_name_hint)
-            setText(currentName)
-            setSelection(text.length)
-            setPadding(dp(20), dp(8), dp(20), dp(8))
+        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_profile, null)
+        val avatarContainer = dialogView.findViewById<View>(R.id.dialogAvatarContainer)
+        val avatarImage = dialogView.findViewById<ImageView>(R.id.dialogAvatarImage)
+        val input = dialogView.findViewById<EditText>(R.id.dialogNameInput)
+
+        input.setText(currentName)
+        input.setSelection(currentName.length)
+
+        val staged = pendingAvatarBitmap
+        if (staged != null) {
+            avatarImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            avatarImage.setImageBitmap(staged)
+        } else {
+            val avatarUrl = authViewModel?.currentUser?.value?.avatarUrl.orEmpty()
+            if (avatarUrl.isNotBlank()) {
+                Picasso.get().load(avatarUrl).fit().centerCrop().into(avatarImage)
+            }
         }
+
+        dialogAvatarView = avatarImage
+        avatarContainer.setOnClickListener { showImageSourceChooser() }
 
         val dialog = MaterialAlertDialogBuilder(ctx)
             .setTitle(R.string.profile_edit_title)
-            .setView(input)
-            .setNeutralButton(R.string.profile_edit_change_photo, null)
+            .setView(dialogView)
             .setNegativeButton(R.string.profile_edit_cancel, null)
             .setPositiveButton(R.string.profile_edit_save, null)
             .create()
 
-        // Override the button clicks so "Change Photo" doesn't dismiss the dialog
-        // and "Save" can validate the name before closing.
         dialog.setOnShowListener {
-            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener {
-                showImageSourceChooser()
-            }
             dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
                 val name = input.text?.toString()?.trim().orEmpty()
                 if (name.isEmpty()) {
@@ -182,6 +196,9 @@ class ProfileFragment : Fragment() {
                 authViewModel?.updateProfile(name, pendingAvatarBitmap)
             }
         }
+
+        dialog.setOnDismissListener { dialogAvatarView = null }
+
         dialog.show()
     }
 
@@ -230,6 +247,7 @@ class ProfileFragment : Fragment() {
             applyUserToHeader(user)
             adapter?.displayName = user?.name?.takeIf { it.isNotBlank() }
                 ?: binding?.nameTextView?.text?.toString()
+            adapter?.avatarUrl = user?.avatarUrl?.takeIf { it.isNotBlank() }
             adapter?.notifyDataSetChanged()
         }
     }
