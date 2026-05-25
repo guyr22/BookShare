@@ -118,6 +118,22 @@
             tools:text="Absolutely gripping — I could not put it down. A must-read for sci-fi fans." />
 
         <TextView
+            android:id="@+id/reviewToggleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="?attr/selectableItemBackground"
+            android:fontFamily="sans-serif-medium"
+            android:paddingVertical="2dp"
+            android:text="@string/feed_card_read_more"
+            android:textColor="@color/bookshare_blue"
+            android:textSize="11sp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="@id/titleTextView"
+            app:layout_constraintTop_toBottomOf="@id/reviewTextView"
+            tools:visibility="visible" />
+
+        <TextView
             android:id="@+id/viewDescriptionTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -129,7 +145,8 @@
             android:textColor="@color/bookshare_blue"
             android:textSize="11sp"
             app:layout_constraintStart_toStartOf="@id/titleTextView"
-            app:layout_constraintTop_toBottomOf="@id/reviewTextView" />
+            app:layout_constraintTop_toBottomOf="@id/reviewToggleTextView"
+            app:layout_goneMarginTop="4dp" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
