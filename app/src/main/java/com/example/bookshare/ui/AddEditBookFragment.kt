@@ -1,10 +1,16 @@
 package com.example.bookshare.ui
 
+import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -15,12 +21,14 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentAddEditBookBinding
 import com.example.bookshare.local.AppDatabase
 import com.example.bookshare.local.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
+import com.example.bookshare.ui.search.BookSearchResultAdapter
 import com.example.bookshare.viewmodel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -41,6 +49,11 @@ class AddEditBookFragment : Fragment() {
 
     /** Whether we've already navigated back so we ignore further LiveData emissions. */
     private var hasNavigatedBack: Boolean = false
+
+    private var searchAdapter: BookSearchResultAdapter? = null
+    private val searchHandler = Handler(Looper.getMainLooper())
+    private var pendingQuery: String = ""
+    private val searchRunnable = Runnable { triggerSearch(pendingQuery) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentAddEditBookBinding.inflate(layoutInflater, container, false)
@@ -91,18 +104,58 @@ class AddEditBookFragment : Fragment() {
     }
 
     private fun setupSearch() {
+        searchAdapter = BookSearchResultAdapter { book ->
+            applyGoogleBooksMatch(book)
+            hideResults()
+            hideKeyboard()
+        }
+        binding?.searchResultsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
+        binding?.searchResultsRecyclerView?.adapter = searchAdapter
+
+        // Live search: fire once typing pauses, and only from MIN_QUERY_LENGTH letters.
+        // The debounce also keeps request volume low (Google Books rate-limits hard).
+        binding?.searchEditText?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim().orEmpty()
+                searchHandler.removeCallbacks(searchRunnable)
+                if (query.length >= MIN_QUERY_LENGTH) {
+                    pendingQuery = query
+                    searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_MS)
+                } else {
+                    binding?.searchProgress?.visibility = View.GONE
+                    hideResults()
+                }
+            }
+        })
+
+        // Pressing the keyboard's search action runs the query immediately.
         binding?.searchEditText?.setOnEditorActionListener { editText, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = editText.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    binding?.searchProgress?.visibility = View.VISIBLE
-                    viewModel?.searchGoogleBooks(query)
-                }
+                searchHandler.removeCallbacks(searchRunnable)
+                if (query.length >= MIN_QUERY_LENGTH) triggerSearch(query)
                 true
             } else {
                 false
             }
         }
+    }
+
+    private fun triggerSearch(query: String) {
+        binding?.searchProgress?.visibility = View.VISIBLE
+        viewModel?.searchGoogleBooks(query)
+    }
+
+    private fun hideResults() {
+        searchAdapter?.submit(emptyList())
+        binding?.searchResultsRecyclerView?.visibility = View.GONE
+    }
+
+    private fun hideKeyboard() {
+        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view?.windowToken, 0)
     }
 
     private fun setupSaveAndDelete() {
@@ -147,20 +200,21 @@ class AddEditBookFragment : Fragment() {
             }
         }
 
-        // Google Books search result → prefill fields from first match.
-        // TODO: replace firstOrNull() with a picker dialog once search-results UI is built.
+        // Google Books search result → show the matches list to pick from.
         vm.searchResult.observe(viewLifecycleOwner) { result ->
             binding?.searchProgress?.visibility = View.GONE
+            val currentLen = binding?.searchEditText?.text?.toString()?.trim()?.length ?: 0
             when (result) {
                 is AppResult.Success -> {
-                    val book = result.data.firstOrNull()
-                    if (book == null) {
-                        Toast.makeText(context, R.string.addedit_search_no_results, Toast.LENGTH_SHORT).show()
+                    if (result.data.isEmpty() || currentLen < MIN_QUERY_LENGTH) {
+                        hideResults()
                     } else {
-                        applyGoogleBooksMatch(book)
+                        searchAdapter?.submit(result.data)
+                        binding?.searchResultsRecyclerView?.visibility = View.VISIBLE
                     }
                 }
                 is AppResult.Error -> {
+                    hideResults()
                     Toast.makeText(
                         context,
                         getString(R.string.addedit_search_failed, result.message),
@@ -239,6 +293,13 @@ class AddEditBookFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        searchHandler.removeCallbacks(searchRunnable)
+        searchAdapter = null
         binding = null
+    }
+
+    private companion object {
+        const val MIN_QUERY_LENGTH = 4
+        const val SEARCH_DEBOUNCE_MS = 400L
     }
 }
