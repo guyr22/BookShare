@@ -7,6 +7,10 @@ import com.example.bookshare.R
 import com.example.bookshare.databinding.ItemBookBinding
 import com.example.bookshare.local.Book
 import com.squareup.picasso.Picasso
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class BookViewHolder(
     private val binding: ItemBookBinding
@@ -16,6 +20,7 @@ class BookViewHolder(
         binding.titleTextView.text = book.title
         binding.authorTextView.text = book.author
         binding.ownerNameTextView.text = ownerName ?: book.ownerId
+        binding.dateTextView.text = formatDate(book.lastUpdated)
         bindCollapsibleDescription(book.description)
 
         if (!ownerAvatarUrl.isNullOrBlank()) {
@@ -84,6 +89,14 @@ class BookViewHolder(
             val overflowed = lastLine >= 0 && layout.getEllipsisCount(lastLine) > 0
             toggle.visibility = if (overflowed) View.VISIBLE else View.GONE
         }
+    }
+
+    private fun formatDate(timestamp: Long): String {
+        val date = Date(timestamp)
+        val thisYear = Calendar.getInstance().get(Calendar.YEAR)
+        val dateYear = Calendar.getInstance().also { it.time = date }.get(Calendar.YEAR)
+        val pattern = if (dateYear == thisYear) "MMM d" else "MMM d, yyyy"
+        return SimpleDateFormat(pattern, Locale.getDefault()).format(date)
     }
 
     private companion object {
