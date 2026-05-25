@@ -14,6 +14,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import retrofit2.HttpException
@@ -41,7 +42,7 @@ class BookRepository(
     suspend fun searchGoogleBooks(query: String): AppResult<List<Book>> {
         // Send the key when configured (local.properties → BuildConfig). Keyless
         // requests share a tiny per-IP quota and 429 easily.
-        val apiKey = BuildConfig.BOOKS_API_KEY.ifBlank { null }
+        val apiKey = BuildConfig.BOOKS_API_KEY.takeIf { it.isNotBlank() }
         var lastError: Exception? = null
 
         // Two attempts: a transient 429 is retried once after a short backoff. A
