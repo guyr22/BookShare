@@ -66,6 +66,37 @@
         app:layout_constraintTop_toBottomOf="@id/feedToolbar"
         tools:visibility="visible" />
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/feedSearchLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
+        app:boxCornerRadiusBottomEnd="24dp"
+        app:boxCornerRadiusBottomStart="24dp"
+        app:boxCornerRadiusTopEnd="24dp"
+        app:boxCornerRadiusTopStart="24dp"
+        app:boxStrokeColor="@color/bookshare_blue"
+        app:endIconDrawable="@drawable/ic_search"
+        app:endIconMode="custom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/syncProgressBar">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/feedSearchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/feed_search_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingVertical="10dp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/booksRecyclerView"
         android:layout_width="0dp"
@@ -76,7 +107,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/syncProgressBar"
+        app:layout_constraintTop_toBottomOf="@id/feedSearchLayout"
         tools:listitem="@layout/item_book" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
