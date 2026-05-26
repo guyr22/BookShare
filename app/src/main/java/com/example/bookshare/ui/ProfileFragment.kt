@@ -28,8 +28,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentProfileBinding
 import com.example.bookshare.local.AppDatabase
-import com.example.bookshare.local.Book
-import com.example.bookshare.local.User
+import com.example.bookshare.model.Book
+import com.example.bookshare.model.User
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.example.bookshare.repository.BookRepository

@@ -3,7 +3,7 @@ package com.example.bookshare.repository
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import com.example.bookshare.BuildConfig
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 import com.example.bookshare.local.BookDao
 import com.example.bookshare.network.NetworkClient
 import com.google.firebase.database.ChildEventListener

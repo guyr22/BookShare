@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
 import kotlinx.coroutines.CoroutineScope

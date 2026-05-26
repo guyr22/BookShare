@@ -2,6 +2,8 @@ package com.example.bookshare.local
 
 import android.content.Context
 import androidx.room.Database
+import com.example.bookshare.model.Book
+import com.example.bookshare.model.User
 import androidx.room.Room
 import androidx.room.RoomDatabase
 

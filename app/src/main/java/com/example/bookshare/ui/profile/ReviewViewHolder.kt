@@ -4,7 +4,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookshare.R
 import com.example.bookshare.databinding.ItemReviewCardBinding
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 import com.example.bookshare.ui.bindCollapsibleDescription
 import com.example.bookshare.ui.formatDate
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

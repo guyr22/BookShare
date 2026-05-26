@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.bookshare.local.User
+import com.example.bookshare.model.User
 import com.example.bookshare.local.UserDao
 import com.example.bookshare.network.toErrorResult
 import com.google.firebase.auth.FirebaseAuth
@@ -65,16 +65,27 @@ class AuthRepository(
     suspend fun registerWithEmail(
         email: String,
         password: String,
-        name: String
+        name: String,
+        avatarBitmap: Bitmap? = null
     ): AppResult<User> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user ?: return AppResult.Error("Registration succeeded but no user was returned.")
 
+            val uid = firebaseUser.uid
+            val avatarUrl = if (avatarBitmap != null) {
+                val path = "avatars/$uid/${System.currentTimeMillis()}.jpg"
+                when (val upload = storageRepository.uploadBitmap(avatarBitmap, path)) {
+                    is AppResult.Success -> upload.data
+                    is AppResult.Error -> ""
+                }
+            } else ""
+
             val user = User(
-                id = firebaseUser.uid,
+                id = uid,
                 email = email,
-                name = name
+                name = name,
+                avatarUrl = avatarUrl
             )
             userDao.insert(user)
             pushUserToFirebase(user)

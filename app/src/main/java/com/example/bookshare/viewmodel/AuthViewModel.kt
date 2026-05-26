@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.bookshare.local.User
+import com.example.bookshare.model.User
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
@@ -41,9 +41,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun register(email: String, password: String, name: String) {
+    fun register(email: String, password: String, name: String, avatarBitmap: Bitmap? = null) {
         viewModelScope.launch {
-            _authResult.value = authRepository.registerWithEmail(email, password, name)
+            _authResult.value = authRepository.registerWithEmail(email, password, name, avatarBitmap)
         }
     }
 
