@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookshare.databinding.ItemReviewCardBinding
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 
 class ReviewsAdapter(
     var items: MutableList<Book>?

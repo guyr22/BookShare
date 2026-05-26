@@ -33,7 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookshare.R
 import com.example.bookshare.databinding.FragmentAddEditBookBinding
 import com.example.bookshare.local.AppDatabase
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 import com.example.bookshare.repository.AppResult
 import com.example.bookshare.repository.BookRepository
 import com.example.bookshare.network.NO_INTERNET_MESSAGE

@@ -2,6 +2,7 @@ package com.example.bookshare.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import com.example.bookshare.model.User
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query

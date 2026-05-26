@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bookshare.databinding.ItemBookSearchResultBinding
-import com.example.bookshare.local.Book
+import com.example.bookshare.model.Book
 import com.squareup.picasso.Picasso
 
 /**

@@ -1,4 +1,4 @@
-package com.example.bookshare.local
+package com.example.bookshare.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
